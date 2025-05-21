@@ -12,8 +12,8 @@ public class BirthDateValidator implements ConstraintValidator<ValidBirthDate, L
 
     @Override
     public void initialize(ValidBirthDate constraintAnnotation) {
-        this.minAge = constraintAnnotation.minAge();
-        this.maxAge = constraintAnnotation.maxAge();
+        this.minAge = ValidBirthDate.minAge;
+        this.maxAge = ValidBirthDate.maxAge;
     }
 
     @Override

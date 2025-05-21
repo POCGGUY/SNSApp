@@ -22,15 +22,15 @@ public class Post{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
 
-    @ManyToOne(optional = true, fetch = FetchType.EAGER)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "ownerUserId", referencedColumnName = "id")
     private User ownerUser;
 
-    @ManyToOne(optional = true, fetch = FetchType.EAGER)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "ownerCommunityId", referencedColumnName = "id")
     private Community ownerCommunity;
 
-    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "authorId", referencedColumnName = "id")
     private User author;
 
