@@ -12,11 +12,11 @@ https://www.docker.com/products/docker-desktop/
 
 2. Клонируйте репозиторий командой(Необходимо установить git если таковой ещё не установлен):
 
-git clone https://github.com/POCGGUY/SNSApp.git
+`git clone https://github.com/POCGGUY/SNSApp.git`
 
 3. Перейдите в директорию SNSApp и выполните внутри неё следующую команду:
 
-docker-compose up --build
+`docker-compose up --build`
 
 4. Дождитесь, пока docker не загрузит все необходимые зависимости и образы.
 
@@ -56,11 +56,11 @@ https://www.pgadmin.org/download/
 (Убедитесь что адрес бд указан в верхней части окна как: test_db/postgres@название_сервера)
 - Введите следующий запрос:
 
-UPDATE sns.users SET systemRole = 'ADMIN' WHERE id = id_пользователя
+`UPDATE sns.users SET systemRole = 'ADMIN' WHERE id = id_пользователя`
 
 Например:
 
-UPDATE sns.users SET systemRole = 'ADMIN' WHERE id = 1
+`UPDATE sns.users SET systemRole = 'ADMIN' WHERE id = 1`
 
 Задаст системную роль 'ADMIN' пользователю с id = 1
 
