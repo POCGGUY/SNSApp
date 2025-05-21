@@ -22,7 +22,7 @@ docker-compose up --build
 
 Лог: (INFO  ru.pocgg.SNSApp.SNSApp - Started SNSApp) будет сигнализировать об успешном запуске приложения
 
-5. После завершения этапа сборки и запуска, Swagger UI, с помощью которого можно работать с приложением станет доступен по следующему адресу:
+5. После завершения этапа сборки и запуска, Swagger UI, с помощью которого можно работать с приложением, станет доступен по следующему адресу:
 
 http://localhost:8080/swagger-ui/index.html#/
 
@@ -42,7 +42,7 @@ https://www.pgadmin.org/download/
 - В поле Host name/address укажите: localhost
 - В поле Port укажите: 5434
 
-(Если поле maintenance database не заполнено автоматически то в него введите значение: postgres)
+(Если поле maintenance database не заполнено автоматически, то в него введите значение: postgres)
 - В поле Username укажите: postgres
 - В поле Password укажите: postgres
 - Флажок Save Password? переведите в положение активен (должен стать тёмно-синим)
@@ -53,7 +53,7 @@ https://www.pgadmin.org/download/
 - Раскройте список Databases
 - Перейдите к базе данных test_db, щёлкнув по ней лкм
 - Откройте окно Create Query (сочетание горячих клавиш: Alt + Shift + Q)
-(Убедитесь что адрес бд указан в верху окна как: test_db/postgres@название_сервера)
+(Убедитесь что адрес бд указан в верхней части окна как: test_db/postgres@название_сервера)
 - Введите следующий запрос:
 
 UPDATE sns.users SET systemRole = 'ADMIN' WHERE id = id_пользователя
