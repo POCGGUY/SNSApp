@@ -10,12 +10,11 @@ import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.create.CreateChatDTO;
 import ru.pocgg.SNSApp.DTO.update.UpdateChatDTO;
 import ru.pocgg.SNSApp.DTO.display.ChatDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.ChatDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.ChatDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.ChatRestController;
 import ru.pocgg.SNSApp.model.Chat;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.ChatService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 
 import java.time.Instant;
 import java.util.Arrays;
@@ -111,7 +110,7 @@ class ChatRestControllerTest {
         when(chatMapper.toDTO(chat)).thenReturn(chatDto);
 
         ResponseEntity<ChatDisplayDTO> resp =
-                controller.getChat(userId, chatId);
+                controller.getChat(chatId);
 
         assertEquals(200, resp.getStatusCodeValue());
         assertEquals(chatDto, resp.getBody());
@@ -124,7 +123,7 @@ class ChatRestControllerTest {
         when(permissionCheckService.canViewChat(userId, chat)).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.getChat(userId, chatId));
+                () -> controller.getChat(chatId));
     }
 
     @Test
@@ -133,7 +132,7 @@ class ChatRestControllerTest {
                 .thenThrow(new EntityNotFoundException("not found"));
 
         assertThrows(EntityNotFoundException.class,
-                () -> controller.getChat(userId, chatId));
+                () -> controller.getChat(chatId));
     }
 
     @Test
@@ -165,7 +164,7 @@ class ChatRestControllerTest {
         doNothing().when(chatService).updateChat(chatId, updateDto);
 
         ResponseEntity<Void> resp =
-                controller.editChat(userId, chatId, updateDto);
+                controller.editChat(userId, updateDto);
 
         assertEquals(204, resp.getStatusCodeValue());
     }
@@ -175,7 +174,7 @@ class ChatRestControllerTest {
         when(permissionCheckService.canEditChat(userId, chatId)).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.editChat(userId, chatId, updateDto));
+                () -> controller.editChat(userId, updateDto));
     }
 
     @Test
@@ -185,7 +184,7 @@ class ChatRestControllerTest {
         doNothing().when(chatService).setDeleted(chatId, true);
 
         ResponseEntity<Void> resp =
-                controller.delete(userId, chatId);
+                controller.delete(chatId);
 
         assertEquals(200, resp.getStatusCodeValue());
     }
@@ -195,6 +194,6 @@ class ChatRestControllerTest {
         when(permissionCheckService.isUserChatOwnerOrSystemModerator(userId, chatId)).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.delete(userId, chatId));
+                () -> controller.delete(chatId));
     }
 }

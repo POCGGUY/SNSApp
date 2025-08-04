@@ -5,6 +5,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class CommunityDeactivatedEvent {
     private int communityId;

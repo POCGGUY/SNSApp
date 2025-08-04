@@ -182,7 +182,7 @@ class PostServiceTest {
     }
 
     @Test
-    void updatePostText_positive() {
+    void updatePost_positive() {
         Post post = Post.userPostBuilder()
                 .ownerUser(user).author(user)
                 .text("a").creationDate(Instant.now())
@@ -190,18 +190,18 @@ class PostServiceTest {
         post.setId(11);
         when(dao.getPostById(11)).thenReturn(post);
 
-        service.updatePostText(11, "new");
+        service.updatePost(11, "new");
 
         assertEquals("new", post.getText());
         assertNotNull(post.getUpdateDate());
     }
 
     @Test
-    void updatePostText_negative() {
+    void updatePost_negative() {
         when(dao.getPostById(12)).thenReturn(null);
 
         assertThrows(EntityNotFoundException.class,
-                () -> service.updatePostText(12, "x"));
+                () -> service.updatePost(12, "x"));
     }
 
     @Test

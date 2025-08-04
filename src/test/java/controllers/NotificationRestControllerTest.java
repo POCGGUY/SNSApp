@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.display.NotificationDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.NotificationDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.NotificationDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.NotificationRestController;
 import ru.pocgg.SNSApp.model.Gender;
 import ru.pocgg.SNSApp.model.Notification;
@@ -16,7 +16,6 @@ import ru.pocgg.SNSApp.model.SystemRole;
 import ru.pocgg.SNSApp.model.User;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.NotificationService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 
 import java.time.Instant;
 import java.time.LocalDate;

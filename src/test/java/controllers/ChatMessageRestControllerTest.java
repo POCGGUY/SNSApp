@@ -10,14 +10,14 @@ import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.create.CreateChatMessageDTO;
 import ru.pocgg.SNSApp.DTO.update.UpdateChatMessageDTO;
 import ru.pocgg.SNSApp.DTO.display.ChatMessageDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.ChatMessageDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.ChatMessageDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.ChatMessageRestController;
 import ru.pocgg.SNSApp.model.Chat;
 import ru.pocgg.SNSApp.model.ChatMessage;
 import ru.pocgg.SNSApp.model.User;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.ChatMessageService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
@@ -195,7 +195,7 @@ class ChatMessageRestControllerTest {
         when(messageMapper.toDTO(message)).thenReturn(messageDto);
 
         ResponseEntity<ChatMessageDisplayDTO> resp =
-                controller.getMessage(userId, messageId);
+                controller.getMessage(messageId);
 
         assertEquals(200, resp.getStatusCodeValue());
         assertEquals(messageDto, resp.getBody());
@@ -207,7 +207,7 @@ class ChatMessageRestControllerTest {
                 .thenThrow(new EntityNotFoundException("not found"));
 
         assertThrows(EntityNotFoundException.class,
-                () -> controller.getMessage(userId, messageId));
+                () -> controller.getMessage(messageId));
     }
 
     @Test
@@ -217,7 +217,7 @@ class ChatMessageRestControllerTest {
         when(permissionCheckService.canUserViewMessagesInChat(userId, chatId)).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.getMessage(userId, messageId));
+                () -> controller.getMessage(messageId));
     }
 
     @Test
@@ -227,7 +227,7 @@ class ChatMessageRestControllerTest {
         doNothing().when(chatMessageService).updateChatMessage(messageId, updateDto);
 
         ResponseEntity<Void> resp =
-                controller.updateMessage(messageId, updateDto, userId);
+                controller.updateMessage(messageId, updateDto);
 
         assertEquals(204, resp.getStatusCodeValue());
     }
@@ -237,7 +237,7 @@ class ChatMessageRestControllerTest {
         when(permissionCheckService.canUserModifyChatMessage(userId, messageId)).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.updateMessage(messageId, updateDto, userId));
+                () -> controller.updateMessage(messageId, updateDto));
     }
 
     @Test

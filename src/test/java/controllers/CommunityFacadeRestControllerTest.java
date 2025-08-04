@@ -10,9 +10,9 @@ import ru.pocgg.SNSApp.DTO.display.CommunityDisplayDTO;
 import ru.pocgg.SNSApp.DTO.display.CommunityFacadeDisplayDTO;
 import ru.pocgg.SNSApp.DTO.display.CommunityMemberDisplayDTO;
 import ru.pocgg.SNSApp.DTO.display.PostDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityDisplayMapper;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityMemberDisplayMapper;
-import ru.pocgg.SNSApp.DTO.mappers.PostDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityMemberDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.PostDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.CommunityFacadeRestController;
 import ru.pocgg.SNSApp.model.Community;
 import ru.pocgg.SNSApp.model.CommunityMember;
@@ -21,7 +21,6 @@ import ru.pocgg.SNSApp.model.User;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.CommunityMemberService;
 import ru.pocgg.SNSApp.services.CommunityService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 import ru.pocgg.SNSApp.services.PostService;
 
 import java.time.Instant;
@@ -159,7 +158,7 @@ class CommunityFacadeRestControllerTest {
         when(memberMapper.toDTO(member)).thenReturn(memberDto);
 
         ResponseEntity<CommunityFacadeDisplayDTO> resp =
-                controller.getCommunityFullProfile(userId, communityId);
+                controller.getCommunityFullProfile(communityId);
 
         assertEquals(200, resp.getStatusCodeValue());
 
@@ -182,6 +181,6 @@ class CommunityFacadeRestControllerTest {
                 .thenThrow(new EntityNotFoundException("not found"));
 
         assertThrows(EntityNotFoundException.class,
-                () -> controller.getCommunityFullProfile(userId, communityId));
+                () -> controller.getCommunityFullProfile(communityId));
     }
 }

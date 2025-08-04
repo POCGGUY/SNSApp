@@ -5,8 +5,9 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class CommunityCreatedEvent {
-    private final int communityId;
-    private final int ownerId;
+    private int communityId;
+    private int ownerId;
 }

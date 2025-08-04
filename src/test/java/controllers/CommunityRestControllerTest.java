@@ -10,14 +10,13 @@ import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.create.CreateCommunityDTO;
 import ru.pocgg.SNSApp.DTO.display.CommunityDisplayDTO;
 import ru.pocgg.SNSApp.DTO.update.UpdateCommunityDTO;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.CommunityRestController;
 import ru.pocgg.SNSApp.model.Community;
 import ru.pocgg.SNSApp.model.User;
-import ru.pocgg.SNSApp.model.exceptions.BadRequestException;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.CommunityService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;

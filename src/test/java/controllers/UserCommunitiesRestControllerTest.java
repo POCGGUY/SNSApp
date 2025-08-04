@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import ru.pocgg.SNSApp.controller.rest.UserCommunitiesRestController;
 import ru.pocgg.SNSApp.DTO.display.CommunityDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityDisplayMapper;
 import ru.pocgg.SNSApp.model.Community;
 import ru.pocgg.SNSApp.services.CommunityService;
 import java.time.Instant;

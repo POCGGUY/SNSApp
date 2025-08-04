@@ -11,8 +11,8 @@ import ru.pocgg.SNSApp.DTO.create.CreateUserDTO;
 import ru.pocgg.SNSApp.DTO.create.CreateUserWithRoleDTO;
 import ru.pocgg.SNSApp.DTO.display.UserDisplayAllDTO;
 import ru.pocgg.SNSApp.DTO.display.UserDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.UserDisplayAllMapper;
-import ru.pocgg.SNSApp.DTO.mappers.UserDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.UserDisplayAllMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.UserDisplayMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdateUserDTO;
 import ru.pocgg.SNSApp.controller.rest.UserRestController;
 import ru.pocgg.SNSApp.model.Gender;
@@ -20,7 +20,7 @@ import ru.pocgg.SNSApp.model.SystemRole;
 import ru.pocgg.SNSApp.model.User;
 import ru.pocgg.SNSApp.model.exceptions.BadRequestException;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
+import ru.pocgg.SNSApp.services.permission.UserPermissionService;
 import ru.pocgg.SNSApp.services.UserService;
 
 import java.time.Instant;
@@ -35,12 +35,16 @@ class UserRestControllerTest {
 
     @Mock
     private UserService userService;
+
     @Mock
-    private UserDisplayMapper mapper;
+    private UserDisplayMapper userDisplayMapper;
+
     @Mock
-    private PermissionCheckService permService;
+    private UserDisplayAllMapper userDisplayAllMapper;
+
     @Mock
-    private UserDisplayAllMapper allMapper;
+    private UserPermissionService userPermissionService;
+
     @InjectMocks
     private UserRestController controller;
 
@@ -94,34 +98,41 @@ class UserRestControllerTest {
                 .build();
 
         user = User.builder()
-                .userName("a").creationDate(Instant.now())
+                .userName("u")
+                .creationDate(creationDate)
                 .birthDate(LocalDate.now().minusYears(30))
-                .password("p").email("a@a")
-                .firstName("A").secondName("A")
-                .gender(Gender.MALE).systemRole(SystemRole.USER)
-                .deleted(false).acceptingPrivateMsgs(true)
-                .postsPublic(true).banned(false)
+                .password("p")
+                .email("u@u")
+                .firstName("U")
+                .secondName("U")
+                .thirdName(null)
+                .gender(Gender.MALE)
+                .systemRole(SystemRole.USER)
+                .deleted(false)
+                .acceptingPrivateMsgs(true)
+                .postsPublic(true)
+                .banned(false)
                 .build();
-        user.setId(42);
 
         displayDto = UserDisplayDTO.builder()
                 .id(42)
-                .firstName("u")
-                .secondName("d")
+                .firstName("U")
+                .secondName("U")
                 .build();
 
         displayAllDto = UserDisplayAllDTO.builder()
                 .id(42)
                 .userName("u")
-                .firstName("u")
-                .secondName("d")
+                .firstName("U")
+                .secondName("U")
                 .build();
     }
 
     @Test
     void register_positive() {
         when(userService.createUser(createDto)).thenReturn(user);
-        when(mapper.toDTO(user)).thenReturn(displayDto);
+
+        when(userDisplayMapper.toDTO(user)).thenReturn(displayDto);
 
         ResponseEntity<UserDisplayDTO> resp = controller.register(createDto);
 
@@ -139,7 +150,8 @@ class UserRestControllerTest {
     @Test
     void createWithSystemRole_positive() {
         when(userService.createUserWithSystemRole(createWithRoleDto)).thenReturn(user);
-        when(mapper.toDTO(user)).thenReturn(displayDto);
+
+        when(userDisplayMapper.toDTO(user)).thenReturn(displayDto);
 
         ResponseEntity<UserDisplayDTO> resp = controller.createWithSystemRole(createWithRoleDto);
 
@@ -149,8 +161,7 @@ class UserRestControllerTest {
 
     @Test
     void createWithSystemRole_negative() {
-        when(userService.createUserWithSystemRole(createWithRoleDto))
-                .thenThrow(new RuntimeException("fail"));
+        when(userService.createUserWithSystemRole(createWithRoleDto)).thenThrow(new RuntimeException("fail"));
 
         assertThrows(RuntimeException.class, () -> controller.createWithSystemRole(createWithRoleDto));
     }
@@ -158,7 +169,8 @@ class UserRestControllerTest {
     @Test
     void getMyProfile_positive() {
         when(userService.getUserById(42)).thenReturn(user);
-        when(mapper.toDTO(user)).thenReturn(displayDto);
+
+        when(userDisplayMapper.toDTO(user)).thenReturn(displayDto);
 
         UserDisplayDTO dto = controller.getMyProfile(42);
 
@@ -175,7 +187,8 @@ class UserRestControllerTest {
     @Test
     void getMyProfileFull_positive() {
         when(userService.getUserById(42)).thenReturn(user);
-        when(allMapper.toDTO(user)).thenReturn(displayAllDto);
+
+        when(userDisplayAllMapper.toDTO(user)).thenReturn(displayAllDto);
 
         UserDisplayAllDTO dto = controller.getMyProfileFull(42);
 
@@ -191,26 +204,29 @@ class UserRestControllerTest {
 
     @Test
     void getProfileById_positive() {
-        when(permService.canViewUserProfile(1, 2)).thenReturn(true);
-        when(userService.getUserById(2)).thenReturn(user);
-        when(mapper.toDTO(user)).thenReturn(displayDto);
+        when(userPermissionService.canViewUserProfile(1, 2)).thenReturn(true);
 
-        UserDisplayDTO dto = controller.getProfileById(1, 2);
+        when(userService.getUserById(2)).thenReturn(user);
+
+        when(userDisplayMapper.toDTO(user)).thenReturn(displayDto);
+
+        UserDisplayDTO dto = controller.getProfileById(2);
 
         assertEquals(displayDto, dto);
     }
 
     @Test
     void getProfileById_negative() {
-        when(permService.canViewUserProfile(1, 2)).thenReturn(false);
+        when(userPermissionService.canViewUserProfile(1, 2)).thenReturn(false);
 
-        assertThrows(AccessDeniedException.class, () -> controller.getProfileById(1, 2));
+        assertThrows(AccessDeniedException.class, () -> controller.getProfileById(2));
     }
 
     @Test
     void getFullById_positive() {
         when(userService.getUserById(5)).thenReturn(user);
-        when(allMapper.toDTO(user)).thenReturn(displayAllDto);
+
+        when(userDisplayAllMapper.toDTO(user)).thenReturn(displayAllDto);
 
         UserDisplayAllDTO dto = controller.getFullById(5);
 
@@ -304,12 +320,11 @@ class UserRestControllerTest {
 
     @Test
     void searchUsers_positive() {
-        when(userService.searchUsers("F", "L", 30, Gender.MALE))
-                .thenReturn(List.of(user));
-        when(mapper.toDTO(user)).thenReturn(displayDto);
+        when(userService.searchUsers("F", "L", 30, Gender.MALE)).thenReturn(List.of(user));
 
-        ResponseEntity<List<UserDisplayDTO>> resp =
-                controller.searchUsers("F", "L", 30, Gender.MALE);
+        when(userDisplayMapper.toDTO(user)).thenReturn(displayDto);
+
+        ResponseEntity<List<UserDisplayDTO>> resp = controller.searchUsers("F", "L", 30, Gender.MALE);
 
         assertEquals(200, resp.getStatusCodeValue());
         assertEquals(displayDto, resp.getBody().get(0));
@@ -317,10 +332,8 @@ class UserRestControllerTest {
 
     @Test
     void searchUsers_negative() {
-        when(userService.searchUsers(null, null, null, null))
-                .thenThrow(new EntityNotFoundException("not found"));
+        when(userService.searchUsers(null, null, null, null)).thenThrow(new EntityNotFoundException("not found"));
 
-        assertThrows(EntityNotFoundException.class,
-                () -> controller.searchUsers(null, null, null, null));
+        assertThrows(EntityNotFoundException.class, () -> controller.searchUsers(null, null, null, null));
     }
 }

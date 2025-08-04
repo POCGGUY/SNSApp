@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import ru.pocgg.SNSApp.controller.rest.UserChatsRestController;
 import ru.pocgg.SNSApp.DTO.display.ChatDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.ChatDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.ChatDisplayMapper;
 import ru.pocgg.SNSApp.model.Chat;
 import ru.pocgg.SNSApp.services.ChatService;
 

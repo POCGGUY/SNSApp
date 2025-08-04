@@ -5,6 +5,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class ChatDeactivatedEvent {
     private int chatId;

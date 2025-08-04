@@ -8,12 +8,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.display.FriendshipDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.FriendshipDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.FriendshipDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.FriendshipRestController;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.FriendshipService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 
 import java.time.Instant;
 import java.time.LocalDate;

@@ -10,12 +10,11 @@ import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.create.CreatePostCommentDTO;
 import ru.pocgg.SNSApp.DTO.display.PostCommentDisplayDTO;
 import ru.pocgg.SNSApp.DTO.update.UpdatePostCommentDTO;
-import ru.pocgg.SNSApp.DTO.mappers.PostCommentDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.PostCommentDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.PostCommentRestController;
 import ru.pocgg.SNSApp.model.Post;
 import ru.pocgg.SNSApp.model.PostComment;
 import ru.pocgg.SNSApp.model.User;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 import ru.pocgg.SNSApp.services.PostCommentService;
 
 import java.time.Instant;
@@ -178,7 +177,7 @@ class PostCommentRestControllerTest {
                 .thenReturn(commentDto2);
 
         ResponseEntity<List<PostCommentDisplayDTO>> resp =
-                controller.listComments(postId, userId);
+                controller.listComments(postId);
 
         assertEquals(200, resp.getStatusCodeValue());
         assertEquals(dtoList, resp.getBody());
@@ -189,7 +188,7 @@ class PostCommentRestControllerTest {
         when(permissionCheckService.canUserViewPost(userId, postId)).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.listComments(postId, userId));
+                () -> controller.listComments(postId));
     }
 
     @Test
@@ -207,7 +206,7 @@ class PostCommentRestControllerTest {
                 .thenReturn(commentDto);
 
         ResponseEntity<PostCommentDisplayDTO> resp =
-                controller.getComment(commentId, userId);
+                controller.getComment(commentId);
 
         assertEquals(200, resp.getStatusCodeValue());
         assertEquals(commentDto, resp.getBody());
@@ -222,7 +221,7 @@ class PostCommentRestControllerTest {
                 .thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.getComment(commentId, userId));
+                () -> controller.getComment(commentId));
     }
 
     @Test
@@ -231,7 +230,7 @@ class PostCommentRestControllerTest {
                 .thenReturn(true);
 
         ResponseEntity<Void> resp =
-                controller.updateComment(commentId, updateDto, userId);
+                controller.updateComment(commentId, updateDto);
 
         assertEquals(204, resp.getStatusCodeValue());
     }
@@ -242,7 +241,7 @@ class PostCommentRestControllerTest {
                 .thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.updateComment(commentId, updateDto, userId));
+                () -> controller.updateComment(commentId, updateDto));
     }
 
     @Test
@@ -251,7 +250,7 @@ class PostCommentRestControllerTest {
                 .thenReturn(true);
 
         ResponseEntity<Void> resp =
-                controller.deleteComment(commentId, userId);
+                controller.deleteComment(commentId);
 
         assertEquals(204, resp.getStatusCodeValue());
     }
@@ -262,6 +261,6 @@ class PostCommentRestControllerTest {
                 .thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.deleteComment(commentId, userId));
+                () -> controller.deleteComment(commentId));
     }
 }

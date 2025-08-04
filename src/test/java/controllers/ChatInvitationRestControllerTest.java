@@ -9,14 +9,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.create.CreateChatInvitationDTO;
 import ru.pocgg.SNSApp.DTO.display.ChatInvitationDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.ChatInvitationDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.ChatInvitationDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.ChatInvitationRestController;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.ChatInvitationService;
 import ru.pocgg.SNSApp.services.ChatMemberService;
 import ru.pocgg.SNSApp.services.ChatService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 import ru.pocgg.SNSApp.services.UserService;
 
 import java.time.Instant;

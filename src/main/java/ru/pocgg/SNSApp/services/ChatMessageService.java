@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.model.ChatMessage;
 import ru.pocgg.SNSApp.DTO.create.CreateChatMessageDTO;
 import ru.pocgg.SNSApp.DTO.update.UpdateChatMessageDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdateChatMessageMapper;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.DAO.interfaces.ChatMessageServiceDAO;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class ChatMessageService extends TemplateService{
     private final ChatMessageServiceDAO chatMessageServiceDAO;
     private final ChatService chatService;
     private final UserService userService;
+    private final UpdateChatMessageMapper updateChatMessageMapper;
 
     public ChatMessage createChatMessage(int chatId,
                                   int senderId,
@@ -56,7 +58,7 @@ public class ChatMessageService extends TemplateService{
 
     public void updateChatMessage(int messageId, UpdateChatMessageDTO dto) {
         ChatMessage chatMessage = getChatMessageById(messageId);
-        updateText(chatMessage, dto.getText());
+        updateChatMessageMapper.updateFromDTO(dto, chatMessage);
         updateDate(chatMessage);
         logger.info("message with id: {} has been updated", messageId);
     }
@@ -67,13 +69,6 @@ public class ChatMessageService extends TemplateService{
             throw new EntityNotFoundException("Message with id " + messageId + " not found");
         }
         return message;
-    }
-
-    private void updateText(ChatMessage chatMessage, String text) {
-        if(text != null){
-            chatMessage.setText(text);
-            logger.info("message with id: {} has updated text", chatMessage.getId());
-        }
     }
 
     private void updateDate(ChatMessage chatMessage) {

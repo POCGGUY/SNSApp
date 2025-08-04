@@ -9,7 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pocgg.SNSApp.DTO.display.NotificationDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.NotificationDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.NotificationDisplayMapper;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.services.*;
 
@@ -23,7 +23,6 @@ import java.util.stream.Collectors;
 @Tag(name = "Notification", description = "Управление уведомлениями")
 public class NotificationRestController extends TemplateController {
     private final NotificationService notificationService;
-    private final PermissionCheckService permissionCheckService;
     private final NotificationDisplayMapper notificationDisplayMapper;
 
     @Operation(summary = "Получить все входящие (непрочитанные) уведомления")
@@ -46,22 +45,19 @@ public class NotificationRestController extends TemplateController {
     }
 
     @Operation(summary = "Пометить уведомление как прочитанное/непрочитанное")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @notificationPermissionService.canMarkRead(principal.id, #id)")
     @PatchMapping("/{id}/read")
     public ResponseEntity<Void> setRead(@PathVariable int id,
-                                        @RequestParam boolean value,
-                                        @AuthenticationPrincipal(expression = "id") int userId) {
-        checkOwnNotification(userId, id);
+                                        @RequestParam boolean value) {
         notificationService.setRead(id, value);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Удалить уведомление")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @notificationPermissionService.canDelete(principal.id, #id)")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable int id,
                                        @AuthenticationPrincipal(expression = "id") int userId) {
-        checkOwnNotification(userId, id);
         notificationService.delete(id);
         return ResponseEntity.noContent().build();
     }
@@ -71,13 +67,5 @@ public class NotificationRestController extends TemplateController {
                 .sorted(Comparator.comparing(Notification::getCreationDate).reversed())
                 .map(notificationDisplayMapper::toDTO)
                 .collect(Collectors.toList());
-    }
-
-    private void checkOwnNotification(int userId, int notificationId) {
-        Notification notification = notificationService.getNotificationById(notificationId);
-        if (notification.getReceiver().getId() != userId
-                && !permissionCheckService.isUserSystemModerator(userId)) {
-            throw new AccessDeniedException("You are not authorized to access this notification");
-        }
     }
 }

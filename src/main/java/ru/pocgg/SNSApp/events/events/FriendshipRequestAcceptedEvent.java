@@ -7,6 +7,7 @@ import ru.pocgg.SNSApp.model.FriendshipRequestId;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class FriendshipRequestAcceptedEvent {
     private FriendshipRequestId id;

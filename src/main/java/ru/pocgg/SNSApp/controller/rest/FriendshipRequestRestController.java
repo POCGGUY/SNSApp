@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pocgg.SNSApp.DTO.display.FriendshipRequestDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.FriendshipRequestDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.FriendshipRequestDisplayMapper;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.model.exceptions.BadRequestException;
 import ru.pocgg.SNSApp.services.*;
@@ -27,20 +27,14 @@ import java.util.stream.Collectors;
 public class FriendshipRequestRestController extends TemplateController {
 
     private final FriendshipRequestService friendshipRequestService;
-    private final PermissionCheckService permissionCheckService;
     private final FriendshipRequestDisplayMapper friendshipRequestDisplayMapper;
-    private final FriendshipService friendshipService;
 
     @Operation(summary = "Создать запрос в друзья")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @friendshipPermissionService.canSendFriendRequest(principal.id, #receiverId)")
     @PostMapping
     public ResponseEntity<FriendshipRequestDisplayDTO> createRequest(@AuthenticationPrincipal(expression = "id")
                                                                          int userId,
                                                                      @RequestParam int receiverId) {
-        checkNotSelf(userId, receiverId);
-        checkCanSend(receiverId);
-        checkIsFriendshipRequestExist(userId, receiverId);
-        checkIsFriendshipDontExist(userId, receiverId);
         FriendshipRequest request = friendshipRequestService.createRequest(userId, receiverId, Instant.now());
         return ResponseEntity.status(HttpStatus.CREATED).body(friendshipRequestDisplayMapper.toDTO(request));
     }
@@ -100,34 +94,8 @@ public class FriendshipRequestRestController extends TemplateController {
         return ResponseEntity.noContent().build();
     }
 
-    private void checkCanSend(int receiverId) {
-        if(!permissionCheckService.canSendFriendRequest(receiverId)) {
-            throw new AccessDeniedException("you cant send friend request to this user");
-        }
-    }
-
     private List<FriendshipRequestDisplayDTO> getDtosSortedByCreationDate(List<FriendshipRequest> requests) {
         return requests.stream().sorted(Comparator.comparing(FriendshipRequest::getCreationDate).reversed())
                 .map(friendshipRequestDisplayMapper::toDTO).collect(Collectors.toList());
-    }
-
-    private void checkIsFriendshipRequestExist(int senderId, int receiverId) {
-        if(friendshipRequestService.isRequestExists(FriendshipRequestId.builder()
-                .senderId(senderId)
-                .receiverId(receiverId).build())) {
-            throw new BadRequestException("friendship request already exist");
-        }
-    }
-
-    private void checkIsFriendshipDontExist(int senderId, int receiverId) {
-        if (friendshipService.isFriendshipExist(senderId, receiverId)) {
-            throw new BadRequestException("users with ids: " + senderId + ", " + receiverId + " are already friends");
-        }
-    }
-
-    private void checkNotSelf(int userId, int otherId) {
-        if (userId == otherId) {
-            throw new BadRequestException("you cant send friend request to yourself");
-        }
     }
 }

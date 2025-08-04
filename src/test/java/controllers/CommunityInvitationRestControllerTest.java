@@ -9,7 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.create.CreateCommunityInvitationDTO;
 import ru.pocgg.SNSApp.DTO.display.CommunityInvitationDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityInvitationDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityInvitationDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.CommunityInvitationRestController;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.model.exceptions.BadRequestException;
@@ -173,7 +173,7 @@ class CommunityInvitationRestControllerTest {
         when(communityInvitationDisplayMapper.toDTO(invitation)).thenReturn(invitationDto);
 
         ResponseEntity<List<CommunityInvitationDisplayDTO>> resp =
-                controller.byCommunity(senderId, communityId);
+                controller.byCommunity(communityId);
 
         assertEquals(200, resp.getStatusCodeValue());
         assertEquals(dtoList, resp.getBody());
@@ -184,7 +184,7 @@ class CommunityInvitationRestControllerTest {
         when(permissionCheckService.canViewInvitationsInCommunity(senderId, communityId)).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.byCommunity(senderId, communityId));
+                () -> controller.byCommunity(communityId));
     }
 
     @Test

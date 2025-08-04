@@ -13,10 +13,9 @@ import ru.pocgg.SNSApp.DTO.update.UpdatePostDTO;
 import ru.pocgg.SNSApp.controller.rest.PostRestController;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.services.CommunityService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 import ru.pocgg.SNSApp.services.PostService;
 import ru.pocgg.SNSApp.services.UserService;
-import ru.pocgg.SNSApp.DTO.mappers.PostDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.PostDisplayMapper;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -272,7 +271,7 @@ class PostRestControllerTest {
         assertEquals(204, resp.getStatusCodeValue());
 
         verify(permissionCheckService).canUserModifyPost(userId, postId);
-        verify(postService).updatePostText(postId, updateDto.getText());
+        verify(postService).updatePost(postId, updateDto.getText());
     }
 
     @Test

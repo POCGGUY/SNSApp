@@ -8,13 +8,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.display.CommunityMemberDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityMemberDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityMemberDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.CommunityMemberRestController;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.model.exceptions.BadRequestException;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.CommunityMemberService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -131,7 +130,7 @@ class CommunityMemberRestControllerTest {
         when(communityMemberDisplayMapper.toDTO(communityMember)).thenReturn(memberDto);
 
         ResponseEntity<List<CommunityMemberDisplayDTO>> resp =
-                controller.listMembers(userId, communityId);
+                controller.listMembers(communityId);
 
         assertEquals(200, resp.getStatusCodeValue());
         assertEquals(dtoList, resp.getBody());
@@ -142,7 +141,7 @@ class CommunityMemberRestControllerTest {
         when(permissionCheckService.canUserViewCommunity(userId, communityId)).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.listMembers(userId, communityId));
+                () -> controller.listMembers(communityId));
     }
 
     @Test
@@ -155,7 +154,7 @@ class CommunityMemberRestControllerTest {
         when(communityMemberDisplayMapper.toDTO(communityMember)).thenReturn(memberDto);
 
         ResponseEntity<CommunityMemberDisplayDTO> resp =
-                controller.getMember(userId, communityId, memberId);
+                controller.getMember(communityId, memberId);
 
         assertEquals(201, resp.getStatusCodeValue());
         assertEquals(memberDto, resp.getBody());
@@ -170,7 +169,7 @@ class CommunityMemberRestControllerTest {
                 .thenThrow(new EntityNotFoundException("not found"));
 
         assertThrows(EntityNotFoundException.class,
-                () -> controller.getMember(userId, communityId, memberId));
+                () -> controller.getMember(communityId, memberId));
     }
 
     @Test
@@ -185,7 +184,7 @@ class CommunityMemberRestControllerTest {
                 CommunityRole.MODERATOR);
 
         ResponseEntity<Void> resp =
-                controller.setRole(userId, communityId, memberId, CommunityRole.MODERATOR);
+                controller.setRole(communityId, memberId, CommunityRole.MODERATOR);
 
         assertEquals(204, resp.getStatusCodeValue());
     }
@@ -195,7 +194,7 @@ class CommunityMemberRestControllerTest {
         when(permissionCheckService.isUserCommunityOwner(userId, communityId)).thenReturn(false);
 
         assertThrows(AccessDeniedException.class,
-                () -> controller.setRole(userId, communityId, memberId, CommunityRole.MODERATOR));
+                () -> controller.setRole(communityId, memberId, CommunityRole.MODERATOR));
     }
 
     @Test

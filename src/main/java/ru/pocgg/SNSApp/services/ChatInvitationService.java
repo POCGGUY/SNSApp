@@ -2,6 +2,8 @@ package ru.pocgg.SNSApp.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import ru.pocgg.SNSApp.model.ChatInvitation;
 import ru.pocgg.SNSApp.model.ChatInvitationId;
@@ -22,8 +24,10 @@ public class ChatInvitationService extends TemplateService{
     private final ChatInvitationServiceDAO chatInvitationServiceDAO;
     private final UserService userService;
     private final ChatService chatService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final RabbitTemplate rabbitTemplate;
 
+    @Value("${app.events.exchange}")
+    private String exchangeName;
 
     public ChatInvitation createChatInvitation(int senderId,
                                      int receiverId,
@@ -37,10 +41,10 @@ public class ChatInvitationService extends TemplateService{
                 .description(dto.getDescription()).build();
         chatInvitationServiceDAO.addChatInvitation(chatInvitation);
         chatInvitationServiceDAO.forceFlush();
-        eventPublisher.publishEvent(
-                ChatInvitationCreatedEvent.builder()
+        ChatInvitationCreatedEvent event = ChatInvitationCreatedEvent.builder()
                 .id(chatInvitation.getId())
-                .build());
+                .build();
+        rabbitTemplate.convertAndSend(exchangeName, "chat.invitation.created", event);
         logger.info("created chat invitation from user with id: {} to user with id: {} in chat with id: {}"
                 , senderId, receiverId, chatId);
         return chatInvitation;
@@ -76,13 +80,19 @@ public class ChatInvitationService extends TemplateService{
 
     public void acceptInvitation(ChatInvitationId id) {
         ChatInvitation chatInvitation = getChatInvitationByIdOrThrowException(id);
-        eventPublisher.publishEvent(new ChatInvitationAcceptedEvent(chatInvitation.getId()));
+        ChatInvitationAcceptedEvent event = ChatInvitationAcceptedEvent.builder()
+                .id(chatInvitation.getId())
+                .build();
+        rabbitTemplate.convertAndSend(exchangeName, "chat.invitation.accepted", event);
         chatInvitationServiceDAO.removeChatInvitation(chatInvitation);
     }
 
     public void declineInvitation(ChatInvitationId id) {
         ChatInvitation chatInvitation = getChatInvitationByIdOrThrowException(id);
-        eventPublisher.publishEvent(new ChatInvitationDeclinedEvent(chatInvitation.getId()));
+        ChatInvitationDeclinedEvent event = ChatInvitationDeclinedEvent.builder()
+                .id(chatInvitation.getId())
+                .build();
+        rabbitTemplate.convertAndSend(exchangeName, "chat.invitation.declined", event);
         chatInvitationServiceDAO.removeChatInvitation(chatInvitation);
     }
 

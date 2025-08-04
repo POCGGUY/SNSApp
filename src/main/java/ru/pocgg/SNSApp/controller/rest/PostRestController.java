@@ -14,10 +14,9 @@ import ru.pocgg.SNSApp.DTO.create.CreatePostDTO;
 import ru.pocgg.SNSApp.DTO.display.PostDisplayDTO;
 import ru.pocgg.SNSApp.DTO.update.UpdatePostDTO;
 import ru.pocgg.SNSApp.model.*;
-import ru.pocgg.SNSApp.DTO.mappers.PostDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.PostDisplayMapper;
 import ru.pocgg.SNSApp.services.*;
 
-import java.net.URI;
 import java.util.Comparator;
 import java.util.List;
 
@@ -28,73 +27,64 @@ import java.util.List;
 public class PostRestController {
 
     private final PostService postService;
-    private final PermissionCheckService permissionCheckService;
     private final UserService userService;
     private final CommunityService communityService;
     private final PostDisplayMapper postDisplayMapper;
 
     @Operation(summary = "Создать пост на странице пользователя")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @postPermissionService.canCreateUserPost(principal.id, #ownerId)")
     @PostMapping("/users/{ownerId}")
     public ResponseEntity<PostDisplayDTO> createUserPost(@AuthenticationPrincipal(expression = "id") int authorId,
                                                          @PathVariable int ownerId,
                                                          @Valid @RequestBody CreatePostDTO dto) {
-        checkCanCreateUserPost(authorId, ownerId);
         userService.getUserById(ownerId);
         Post post = postService.createUserPost(ownerId, authorId, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(postDisplayMapper.toDTO(post));
     }
 
     @Operation(summary = "Создать пост на странице сообщества")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @postPermissionService.canCreateCommunityPost(principal.id, #ownerId)")
     @PostMapping("/communities/{ownerId}")
     public ResponseEntity<PostDisplayDTO> createCommunityPost(@AuthenticationPrincipal(expression = "id") int authorId,
                                                               @PathVariable int ownerId,
                                                               @Valid @RequestBody CreatePostDTO dto) {
-        checkCanCreateCommunityPost(authorId, ownerId);
         communityService.getCommunityById(ownerId);
         Post post = postService.createCommunityPost(ownerId, authorId, dto);
         return ResponseEntity.status(HttpStatus.CREATED).body(postDisplayMapper.toDTO(post));
     }
 
     @Operation(summary = "Список постов у сообщества")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @postPermissionService.canViewCommunityPosts(principal.id, #communityId)")
     @GetMapping("/communities/{communityId}")
     public ResponseEntity<List<PostDisplayDTO>> getPostsByCommunity(@AuthenticationPrincipal(expression = "id")
                                                                     int userId,
                                                                     @PathVariable int communityId) {
-        checkCanViewByCommunityOwner(userId, communityId);
         List<PostDisplayDTO> dtos = getDTOsSortedByCreationDate(postService.getPostsByCommunityOwner(communityId));
         return ResponseEntity.ok(dtos);
     }
 
     @Operation(summary = "Список постов у пользователя")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @postPermissionService.canViewUserPosts(principal.id, #targetUserId)")
     @GetMapping("/users/{targetUserId}")
     public ResponseEntity<List<PostDisplayDTO>> getPostsByUser(@AuthenticationPrincipal(expression = "id") int userId,
                                                                @PathVariable int targetUserId) {
-        checkCanViewByUserOwner(userId, targetUserId);
         List<PostDisplayDTO> dtos = getDTOsSortedByCreationDate(postService.getPostsByUserOwner(targetUserId));
         return ResponseEntity.ok(dtos);
     }
 
     @Operation(summary = "Редактировать текст поста")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @postPermissionService.canModifyPost(principal.id, #postId)")
     @PatchMapping("/{postId}")
-    public ResponseEntity<Void> updatePost(@AuthenticationPrincipal(expression = "id") int userId,
-                                           @PathVariable int postId,
+    public ResponseEntity<Void> updatePost(@PathVariable int postId,
                                            @Valid @RequestBody UpdatePostDTO dto) {
-        checkCanModifyPost(userId, postId);
-        postService.updatePostText(postId, dto.getText());
+        postService.updatePost(postId, dto);
         return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Удалить пост")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @postPermissionService.canDeletePost(principal.id, #postId)")
     @DeleteMapping("/{postId}/delete")
-    public ResponseEntity<Void> setDeleted(@AuthenticationPrincipal(expression = "id") int userId,
-                                           @PathVariable int postId) {
-        checkCanDeletePost(userId, postId);
+    public ResponseEntity<Void> setDeleted(@PathVariable int postId) {
         postService.setIsDeleted(postId, true);
         return ResponseEntity.noContent().build();
     }
@@ -102,42 +92,6 @@ public class PostRestController {
     private List<PostDisplayDTO> getDTOsSortedByCreationDate(List<Post> posts) {
         return posts.stream()
                 .sorted(Comparator.comparing(Post::getCreationDate).reversed()).map(postDisplayMapper::toDTO).toList();
-    }
-
-    private void checkCanCreateUserPost(int authorId, int ownerId) {
-        if (!permissionCheckService.canUserCreateUserPost(authorId, ownerId)) {
-            throw new AccessDeniedException("you are not allowed to create post for this user");
-        }
-    }
-
-    private void checkCanCreateCommunityPost(int authorId, int communityId) {
-        if (!permissionCheckService.canUserCreateCommunityPost(authorId, communityId)) {
-            throw new AccessDeniedException("you are not allowed to create post for this community");
-        }
-    }
-
-    private void checkCanViewByUserOwner(int userId, int targetUserId) {
-        if (!permissionCheckService.canViewPostsAtUser(userId, targetUserId)) {
-            throw new AccessDeniedException("not allowed to view posts at this user");
-        }
-    }
-
-    private void checkCanViewByCommunityOwner(int userId, int communityId) {
-        if (!permissionCheckService.canViewPostsAtCommunity(userId, communityId)) {
-            throw new AccessDeniedException("not allowed to view posts at this community");
-        }
-    }
-
-    private void checkCanModifyPost(int userId, int postId) {
-        if (!permissionCheckService.canUserModifyPost(userId, postId)) {
-            throw new AccessDeniedException("not allowed to modify this post");
-        }
-    }
-
-    private void checkCanDeletePost(int userId, int postId) {
-        if (!permissionCheckService.canUserDeletePost(userId, postId)) {
-            throw new AccessDeniedException("not allowed to delete this post");
-        }
     }
 }
 

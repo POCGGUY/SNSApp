@@ -6,7 +6,8 @@ import ru.pocgg.SNSApp.model.ChatInvitationId;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class ChatInvitationDeclinedEvent {
-    private final ChatInvitationId id;
+    private ChatInvitationId id;
 }

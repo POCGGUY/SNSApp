@@ -5,6 +5,7 @@ import lombok.*;
 @Getter
 @Setter
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 public class UserDeactivatedEvent {
     private int userId;

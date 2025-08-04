@@ -8,7 +8,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
 import ru.pocgg.SNSApp.DTO.display.ChatMemberDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.ChatMemberDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.ChatMemberDisplayMapper;
 import ru.pocgg.SNSApp.controller.rest.ChatMemberRestController;
 import ru.pocgg.SNSApp.model.Chat;
 import ru.pocgg.SNSApp.model.ChatMember;
@@ -17,7 +17,6 @@ import ru.pocgg.SNSApp.model.User;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
 import ru.pocgg.SNSApp.services.ChatMemberService;
 import ru.pocgg.SNSApp.services.ChatService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 
 import java.time.Instant;
 import java.time.LocalDate;
