@@ -65,3 +65,9 @@ https://www.pgadmin.org/download/
 Задаст системную роль 'ADMIN' пользователю с id = 1
 
 - Выполните его командой Excecute Script (горячая клавиша F5)
+
+### CHANGELOG
+`alpha 1.1`
+- Отправка событий и их обработка перенесены на RabbitMQ
+- Проверка полномочий перенесена в слой Spring Security
+- Теперь сущности обновляются через MapStruct
