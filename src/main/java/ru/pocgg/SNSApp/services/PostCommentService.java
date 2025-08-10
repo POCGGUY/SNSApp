@@ -1,6 +1,6 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.DTO.create.CreatePostCommentDTO;
 import ru.pocgg.SNSApp.DTO.mappers.update.UpdatePostCommentMapper;
@@ -48,6 +48,7 @@ public class PostCommentService extends TemplateService{
         logger.info("comment with id: {} now has property deleted set to: {}", commentId, value);
     }
 
+    @Transactional(readOnly = true)
     public PostComment getCommentById(int commentId) {
         return getCommentByIdOrThrowException(commentId);
     }
@@ -58,6 +59,7 @@ public class PostCommentService extends TemplateService{
         updateTime(comment);
     }
 
+    @Transactional(readOnly = true)
     public List<PostComment> getCommentsByPostId(int postId) {
         return postCommentServiceDAO.getCommentsByPostId(postId);
     }

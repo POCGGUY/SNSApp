@@ -1,10 +1,9 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.pocgg.SNSApp.DTO.create.CreateUserDTO;
 import ru.pocgg.SNSApp.DTO.create.CreateUserWithRoleDTO;
@@ -28,6 +27,7 @@ import java.util.List;
 @Transactional
 public class UserService extends TemplateService{
     private final UserServiceDAO userServiceDAO;
+    private final UpdateUserMapper updateUserMapper;
     private final PasswordEncoder passwordEncoder;
     private final RabbitTemplate rabbitTemplate;
 
@@ -37,18 +37,19 @@ public class UserService extends TemplateService{
     private final SystemRole defaultSystemRole = SystemRole.USER;
     private final boolean defaultPostsPublic = true;
     private final boolean defaultAcceptingPrivateMsgs = true;
-    private final UpdateUserMapper updateUserMapper;
 
+    @Transactional(readOnly = true)
     public User getUserById(int userId) {
         return getUserByIdOrThrowException(userId);
     }
 
+    @Transactional(readOnly = true)
     public User getUserByUserName(String userName) {
         return getUserByUserNameOrThrowException(userName);
     }
 
     public User createUser(CreateUserDTO createUserDTO) {
-        validate(createUserDTO.getUserName(), createUserDTO.getEmail());
+        checkIsUniqueValuesValid(createUserDTO.getUserName(), createUserDTO.getEmail());
         User user = User.builder()
                 .userName(createUserDTO.getUserName())
                 .creationDate(Instant.now())
@@ -72,7 +73,7 @@ public class UserService extends TemplateService{
     }
 
     public User createUserWithSystemRole(CreateUserWithRoleDTO dto) {
-        validate(dto.getUserName(), dto.getEmail());
+        checkIsUniqueValuesValid(dto.getUserName(), dto.getEmail());
         User user = User.builder()
                 .userName(dto.getUserName())
                 .creationDate(Instant.now())
@@ -96,6 +97,7 @@ public class UserService extends TemplateService{
         return user;
     }
 
+    @Transactional(readOnly = true)
     public List<User> searchUsers(String firstName,
                                   String secondName,
                                   Integer age,
@@ -177,7 +179,7 @@ public class UserService extends TemplateService{
         }
     }
 
-    private void validate(String userName, String email) {
+    private void checkIsUniqueValuesValid(String userName, String email) {
         validateByUserName(userName);
         validateByEmail(email);
     }

@@ -27,7 +27,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "Chat Message", description = "Управление сообщениями в чате")
 public class ChatMessageRestController extends TemplateController {
-
     private final ChatMessageService chatMessageService;
     private final ChatMessageDisplayMapper messageMapper;
 

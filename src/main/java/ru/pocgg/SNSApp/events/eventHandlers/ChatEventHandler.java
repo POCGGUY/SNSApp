@@ -32,7 +32,9 @@ public class ChatEventHandler {
     private final ChatMemberService chatMemberService;
     private final ChatInvitationService chatInvitationService;
 
-    @RabbitListener(bindings = @QueueBinding(
+    @RabbitListener(
+            containerFactory = "rabbitListenerContainerFactory",
+            bindings = @QueueBinding(
             exchange = @Exchange(
                     name = "app.events.exchange",
                     type = ExchangeTypes.TOPIC,
@@ -46,7 +48,6 @@ public class ChatEventHandler {
                     "chat.created",
                     "chat.became.public"
             }
-
     ))
     public void handle(Message message,
                        @Header(AmqpHeaders.RECEIVED_ROUTING_KEY) String routingKeys){

@@ -25,10 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "Chat Invitation", description = "Приглашения в чаты")
 public class ChatInvitationRestController {
-
     private final ChatInvitationService chatInvitationService;
-    private final UserService userService;
-    private final ChatService chatService;
     private final ChatInvitationDisplayMapper chatInvitationDisplayMapper;
 
     @Operation(summary = "Создать приглашение в чат")

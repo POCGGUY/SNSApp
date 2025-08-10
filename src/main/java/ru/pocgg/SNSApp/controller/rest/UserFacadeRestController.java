@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "User Facade", description = "Информация о пользователе, его постах и друзьях")
 public class UserFacadeRestController {
-
     private final UserService userService;
     private final PostService postService;
     private final FriendshipService friendshipService;

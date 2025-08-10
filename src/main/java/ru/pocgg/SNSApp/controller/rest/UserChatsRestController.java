@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "User Chats", description = "Чаты, в которых состоит пользователь")
 public class UserChatsRestController {
-
     private final ChatService chatService;
     private final ChatDisplayMapper chatDisplayMapper;
 

@@ -22,7 +22,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pocgg.SNSApp.services.UserService;
 
-import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 

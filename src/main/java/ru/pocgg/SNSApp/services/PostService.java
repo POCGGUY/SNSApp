@@ -1,6 +1,6 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.DTO.mappers.update.UpdatePostMapper;
 import ru.pocgg.SNSApp.model.*;
@@ -61,18 +61,22 @@ public class PostService extends TemplateService{
         logger.info("updated text of post with id: {}", postId);
     }
 
+    @Transactional(readOnly = true)
     public Post getPostById(int postId) {
         return getPostByIdOrThrowException(postId);
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getPostsByCommunityOwner(int ownerId) {
         return postDAO.getPostsByCommunityOwnerId(ownerId);
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getPostsByUserOwner(int ownerId) {
         return postDAO.getPostsByUserOwnerId(ownerId);
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getPostsByAuthor(int authorId) {
         return postDAO.getPostsByAuthorId(authorId);
     }

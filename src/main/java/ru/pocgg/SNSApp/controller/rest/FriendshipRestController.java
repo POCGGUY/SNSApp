@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "Friendship", description = "Управление дружбой между пользователями")
 public class FriendshipRestController extends TemplateController {
-
     private final FriendshipService friendshipService;
     private final FriendshipDisplayMapper friendshipDisplayMapper;
 

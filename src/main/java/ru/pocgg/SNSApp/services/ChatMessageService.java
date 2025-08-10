@@ -1,6 +1,6 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.model.ChatMessage;
 import ru.pocgg.SNSApp.DTO.create.CreateChatMessageDTO;
@@ -38,14 +38,17 @@ public class ChatMessageService extends TemplateService{
         return chatMessage;
     }
 
+    @Transactional(readOnly = true)
     public List<ChatMessage> getMessagesByChatId(int chatId) {
         return chatMessageServiceDAO.getMessagesByChatId(chatId);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatMessage> getMessagesByChatIdAndSenderId(int chatId, int senderId) {
         return chatMessageServiceDAO.getMessagesByChatIdAndSenderId(chatId, senderId);
     }
 
+    @Transactional(readOnly = true)
     public ChatMessage getChatMessageById(int messageId) {
         return getChatMessageByIdOrThrowException(messageId);
     }

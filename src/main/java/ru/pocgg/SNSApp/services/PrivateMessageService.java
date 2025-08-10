@@ -1,6 +1,6 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.DTO.create.CreatePrivateMessageDTO;
 import ru.pocgg.SNSApp.DTO.mappers.update.UpdatePrivateMessageMapper;
@@ -45,10 +45,12 @@ public class PrivateMessageService extends TemplateService{
         updateTime(message);
     }
 
+    @Transactional(readOnly = true)
     public PrivateMessage getById(int messageId) {
         return getMessageByIdOrThrowException(messageId);
     }
 
+    @Transactional(readOnly = true)
     public List<PrivateMessage> getAllBySenderAndReceiver(int senderId, int receiverId) {
         return privateMessageDAO.getAllBySenderAndReceiver(senderId, receiverId);
     }

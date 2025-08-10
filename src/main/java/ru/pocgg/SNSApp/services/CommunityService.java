@@ -1,6 +1,6 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
@@ -61,18 +61,22 @@ public class CommunityService extends TemplateService {
         logger.info("updated community with id: {}", communityId);
     }
 
+    @Transactional(readOnly = true)
     public List<Community> getAllCommunities() {
         return communityServiceDAO.getAllCommunities();
     }
 
+    @Transactional(readOnly = true)
     public List<Community> getCommunitiesByMemberId(int memberId) {
         return communityMemberServiceDAO.getCommunitiesByMemberId(memberId);
     }
 
+    @Transactional(readOnly = true)
     public Community getCommunityById(int communityId) {
         return getCommunityByIdOrThrowException(communityId);
     }
 
+    @Transactional(readOnly = true)
     public List<Community> searchCommunities(String communityName) {
         return communityServiceDAO.searchCommunities(communityName);
     }

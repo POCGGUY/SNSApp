@@ -40,9 +40,16 @@ public class NotificationServiceDAOImpl implements NotificationServiceDAO {
                 .getResultList();
     }
 
-    public List<Notification> getNotificationsByReceiverId(int receiverId) {
+    public List<Notification> getAllNotificationsByReceiverId(int receiverId) {
         return getSession()
                 .createQuery(NotificationServiceDAORequests.GET_BY_RECEIVER_ID, Notification.class)
+                .setParameter("receiverId", receiverId)
+                .getResultList();
+    }
+
+    public List<Notification> getNotSeenNotificationsByReceiverId(int receiverId) {
+        return getSession()
+                .createQuery(NotificationServiceDAORequests.GET_NOT_SEEN_BY_RECEIVER_ID, Notification.class)
                 .setParameter("receiverId", receiverId)
                 .getResultList();
     }

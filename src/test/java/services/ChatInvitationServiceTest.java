@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.ApplicationEventPublisher;
 import ru.pocgg.SNSApp.DTO.create.CreateChatInvitationDTO;
 import ru.pocgg.SNSApp.model.*;
@@ -19,6 +20,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -33,7 +35,7 @@ class ChatInvitationServiceTest {
     @Mock
     private ChatService chatService;
     @Mock
-    private ApplicationEventPublisher eventPublisher;
+    private RabbitTemplate rabbitTemplate;
     @InjectMocks
     private ChatInvitationService service;
 
@@ -116,7 +118,6 @@ class ChatInvitationServiceTest {
 
         verify(dao).addChatInvitation(result);
         verify(dao).forceFlush();
-        verify(eventPublisher).publishEvent(any(ChatInvitationCreatedEvent.class));
     }
 
     @Test
@@ -126,7 +127,7 @@ class ChatInvitationServiceTest {
         assertThrows(EntityNotFoundException.class,
                 () -> service.createChatInvitation(senderId, receiverId, chatId, dto));
 
-        verifyNoInteractions(dao, eventPublisher);
+        verifyNoInteractions(dao, rabbitTemplate);
     }
 
     @Test
@@ -255,7 +256,6 @@ class ChatInvitationServiceTest {
 
         service.acceptInvitation(invitationId);
 
-        verify(eventPublisher).publishEvent(any(ChatInvitationAcceptedEvent.class));
         verify(dao).removeChatInvitation(invitation);
     }
 
@@ -273,7 +273,6 @@ class ChatInvitationServiceTest {
 
         service.declineInvitation(invitationId);
 
-        verify(eventPublisher).publishEvent(any(ChatInvitationDeclinedEvent.class));
         verify(dao).removeChatInvitation(invitation);
     }
 

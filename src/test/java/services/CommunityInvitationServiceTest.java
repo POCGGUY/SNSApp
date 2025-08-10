@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.ApplicationEventPublisher;
 import ru.pocgg.SNSApp.DTO.create.CreateCommunityInvitationDTO;
 import ru.pocgg.SNSApp.events.events.CommunityInvitationAcceptedEvent;
@@ -35,7 +36,7 @@ class CommunityInvitationServiceTest {
     @Mock
     private CommunityService communityService;
     @Mock
-    private ApplicationEventPublisher eventPublisher;
+    private RabbitTemplate rabbitTemplate;
     @InjectMocks
     private CommunityInvitationService service;
 
@@ -117,7 +118,6 @@ class CommunityInvitationServiceTest {
         assertNotNull(result);
 
         verify(dao).addInvitation(result);
-        verify(eventPublisher).publishEvent(any(CommunityInvitationCreatedEvent.class));
     }
 
     @Test
@@ -127,7 +127,7 @@ class CommunityInvitationServiceTest {
         assertThrows(EntityNotFoundException.class,
                 () -> service.createInvitation(senderId, receiverId, communityId, creationDate, dto));
 
-        verifyNoInteractions(dao, eventPublisher);
+        verifyNoInteractions(dao, rabbitTemplate);
     }
 
     @Test
@@ -235,7 +235,6 @@ class CommunityInvitationServiceTest {
 
         service.acceptInvitation(id);
 
-        verify(eventPublisher).publishEvent(any(CommunityInvitationAcceptedEvent.class));
         verify(dao).removeInvitation(invitation);
     }
 
@@ -253,7 +252,6 @@ class CommunityInvitationServiceTest {
 
         service.declineInvitation(id);
 
-        verify(eventPublisher).publishEvent(any(CommunityInvitationDeclinedEvent.class));
         verify(dao).removeInvitation(invitation);
     }
 

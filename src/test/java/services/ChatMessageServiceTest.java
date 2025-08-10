@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.pocgg.SNSApp.DTO.create.CreateChatMessageDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdateChatMessageMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdateChatMessageDTO;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
@@ -31,6 +32,8 @@ class ChatMessageServiceTest {
     private ChatService chatService;
     @Mock
     private UserService userService;
+    @Mock
+    private UpdateChatMessageMapper updateChatMessageMapper;
     @InjectMocks
     private ChatMessageService service;
 
@@ -170,8 +173,10 @@ class ChatMessageServiceTest {
     @Test
     void updateChatMessage_positive() {
         when(dao.getChatMessageById(100)).thenReturn(message);
+
         service.updateChatMessage(100, updateDto);
-        assertEquals("updated", message.getText());
+        verify(updateChatMessageMapper).updateFromDTO(updateDto, message);
+
         assertNotNull(message.getUpdateDate());
     }
 

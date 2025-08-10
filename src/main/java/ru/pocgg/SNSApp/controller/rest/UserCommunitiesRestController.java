@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "User Communities", description = "Сообщества, в которых состоит пользователь")
 public class UserCommunitiesRestController {
-
     private final CommunityService communityService;
     private final CommunityDisplayMapper communityDisplayMapper;
 

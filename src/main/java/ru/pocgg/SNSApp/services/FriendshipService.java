@@ -1,6 +1,6 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.model.Friendship;
 import ru.pocgg.SNSApp.model.FriendshipId;
@@ -32,6 +32,7 @@ public class FriendshipService extends TemplateService{
         return friendship;
     }
 
+    @Transactional(readOnly = true)
     public List<Friendship> getUserFriendships(int userId) {
         List<Friendship> friendships = new ArrayList<>();
         friendships.addAll(friendshipServiceDAO.getFriendshipsByUserId(userId));
@@ -45,6 +46,7 @@ public class FriendshipService extends TemplateService{
         logger.info("friendship between user with id: {} and user with id: {} has been removed", userId, friendId);
     }
 
+    @Transactional(readOnly = true)
     public Boolean isFriendshipExist(int userId, int friendId) {
         FriendshipId directId = new FriendshipId(userId, friendId);
         FriendshipId reverseId = new FriendshipId(friendId, userId);
@@ -55,6 +57,7 @@ public class FriendshipService extends TemplateService{
         return friendship != null;
     }
 
+    @Transactional(readOnly = true)
     public Friendship getFriendshipByEmbeddedId(int userId, int friendId) {
         FriendshipId directId = new FriendshipId(userId, friendId);
         FriendshipId reverseId = new FriendshipId(friendId, userId);

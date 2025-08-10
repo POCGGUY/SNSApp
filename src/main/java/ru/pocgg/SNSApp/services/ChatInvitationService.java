@@ -1,10 +1,9 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationEventPublisher;
 import ru.pocgg.SNSApp.model.ChatInvitation;
 import ru.pocgg.SNSApp.model.ChatInvitationId;
 import ru.pocgg.SNSApp.DTO.create.CreateChatInvitationDTO;
@@ -50,26 +49,32 @@ public class ChatInvitationService extends TemplateService{
         return chatInvitation;
     }
 
+    @Transactional(readOnly = true)
     public ChatInvitation getById(ChatInvitationId id) {
         return getChatInvitationByIdOrThrowException(id);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatInvitation> getByReceiver(int receiverId) {
         return chatInvitationServiceDAO.getByReceiverId(receiverId);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatInvitation> getBySender(int senderId) {
         return chatInvitationServiceDAO.getBySenderId(senderId);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatInvitation> getByChat(int chatId) {
         return chatInvitationServiceDAO.getByChatId(chatId);
     }
 
+    @Transactional(readOnly = true)
     public List<ChatInvitation> getAllChatInvitations() {
         return chatInvitationServiceDAO.getAllChatInvitations();
     }
 
+    @Transactional(readOnly = true)
     public boolean isInvitationExist(ChatInvitationId id) {
         return chatInvitationServiceDAO.getChatInvitationById(id) != null;
     }

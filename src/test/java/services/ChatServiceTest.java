@@ -5,7 +5,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import ru.pocgg.SNSApp.DTO.create.CreateChatDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdateChatMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdateChatDTO;
 import ru.pocgg.SNSApp.model.Chat;
 import ru.pocgg.SNSApp.model.Gender;
@@ -39,7 +41,9 @@ class ChatServiceTest {
     @Mock
     private UserService userService;
     @Mock
-    private ApplicationEventPublisher eventPublisher;
+    private RabbitTemplate rabbitTemplate;
+    @Mock
+    private UpdateChatMapper updateChatMapper;
     @InjectMocks
     private ChatService service;
 
@@ -86,7 +90,6 @@ class ChatServiceTest {
         assertFalse(result.isPrivate());
         verify(chatServiceDAO).addChat(result);
         verify(chatServiceDAO).forceFlush();
-        verify(eventPublisher).publishEvent(any(ChatCreatedEvent.class));
     }
 
     @Test
@@ -94,7 +97,7 @@ class ChatServiceTest {
         when(userService.getUserById(ownerId)).thenThrow(new EntityNotFoundException("no user"));
 
         assertThrows(EntityNotFoundException.class, () -> service.createChat(ownerId, createDto));
-        verifyNoInteractions(chatServiceDAO, eventPublisher);
+        verifyNoInteractions(chatServiceDAO, rabbitTemplate);
     }
 
     @Test
@@ -103,10 +106,7 @@ class ChatServiceTest {
 
         service.updateChat(chatId, updateDto);
 
-        assertEquals("updName", chat.getName());
-        assertEquals("updDesc", chat.getDescription());
-        assertFalse(chat.isPrivate());
-        verify(eventPublisher).publishEvent(any(ChatBecamePublicEvent.class));
+        verify(updateChatMapper).updateFromDTO(updateDto, chat);
     }
 
     @Test
@@ -178,7 +178,6 @@ class ChatServiceTest {
         service.setDeleted(chatId, true);
 
         assertTrue(chat.isDeleted());
-        verify(eventPublisher).publishEvent(any(ChatDeactivatedEvent.class));
     }
 
     @Test

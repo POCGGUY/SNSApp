@@ -32,7 +32,9 @@ public class CommunityEventHandler {
     private final CommunityInvitationService communityInvitationService;
     private final ObjectMapper mapper;
 
-    @RabbitListener(bindings = @QueueBinding(
+    @RabbitListener(
+            containerFactory = "rabbitListenerContainerFactory",
+            bindings = @QueueBinding(
             exchange = @Exchange(
                     name = "app.events.exchange",
                     type = ExchangeTypes.TOPIC,

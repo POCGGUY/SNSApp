@@ -1,6 +1,6 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.model.ChatMember;
 import ru.pocgg.SNSApp.model.ChatMemberId;
@@ -31,18 +31,22 @@ public class ChatMemberService extends TemplateService{
         return chatMember;
     }
 
+    @Transactional(readOnly = true)
     public ChatMember getChatMemberById(ChatMemberId id) {
         return getChatMemberByIdOrThrowException(id);
     }
 
+    @Transactional(readOnly = true)
     public Boolean isChatMemberExist(ChatMemberId id) {
         return chatMemberServiceDAO.getChatMemberById(id) != null;
     }
 
+    @Transactional(readOnly = true)
     public List<ChatMember> getAllChatMembers() {
         return chatMemberServiceDAO.getAllChatMembers();
     }
 
+    @Transactional(readOnly = true)
     public List<ChatMember> getChatMembersByChatId(int chatId) {
         return chatMemberServiceDAO.getMembersByChatId(chatId);
     }

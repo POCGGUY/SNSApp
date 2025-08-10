@@ -4,7 +4,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -25,13 +24,13 @@ public class NotificationRestController extends TemplateController {
     private final NotificationService notificationService;
     private final NotificationDisplayMapper notificationDisplayMapper;
 
-    @Operation(summary = "Получить все входящие (непрочитанные) уведомления")
+    @Operation(summary = "Получить все (непрочитанные) уведомления")
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/incoming")
-    public ResponseEntity<List<NotificationDisplayDTO>> getIncoming(@AuthenticationPrincipal(expression = "id")
+    public ResponseEntity<List<NotificationDisplayDTO>> getNotSeen(@AuthenticationPrincipal(expression = "id")
                                                                     int userId) {
         List<NotificationDisplayDTO> list =
-                getDTOsSortedByCreationDate(notificationService.getNotificationsByReceiverId(userId));
+                getDTOsSortedByCreationDate(notificationService.getNotSeenNotificationsByReceiverId(userId));
         return ResponseEntity.ok(list);
     }
 
@@ -40,7 +39,7 @@ public class NotificationRestController extends TemplateController {
     @GetMapping
     public ResponseEntity<List<NotificationDisplayDTO>> getAll(@AuthenticationPrincipal(expression = "id") int userId) {
         List<NotificationDisplayDTO> list =
-                getDTOsSortedByCreationDate(notificationService.getNotificationsByReceiverId(userId));
+                getDTOsSortedByCreationDate(notificationService.getAllNotificationsByReceiverId(userId));
         return ResponseEntity.ok(list);
     }
 

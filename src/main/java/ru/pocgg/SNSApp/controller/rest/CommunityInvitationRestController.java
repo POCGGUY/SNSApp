@@ -28,12 +28,10 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "Community Invitation", description = "Приглашения в сообщества")
 public class CommunityInvitationRestController {
-
     private final CommunityInvitationService communityInvitationService;
     private final UserService userService;
     private final CommunityService communityService;
     private final CommunityInvitationDisplayMapper communityInvitationDisplayMapper;
-    private final CommunityMemberService communityMemberService;
 
     @Operation(summary = "Создать приглашение в сообщество")
     @PreAuthorize("hasRole('USER') " +

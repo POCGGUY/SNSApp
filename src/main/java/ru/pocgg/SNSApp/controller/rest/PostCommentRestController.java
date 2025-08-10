@@ -26,7 +26,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "Post Comment", description = "Управление комментариями к постам")
 public class PostCommentRestController extends TemplateController {
-
     private final PostCommentService postCommentService;
     private final PostCommentDisplayMapper commentDisplayMapper;
 

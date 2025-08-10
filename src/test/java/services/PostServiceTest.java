@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.pocgg.SNSApp.DTO.create.CreatePostDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdatePostMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdatePostDTO;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
@@ -25,13 +26,15 @@ import static org.mockito.Mockito.*;
 class PostServiceTest {
 
     @Mock
-    PostServiceDAO dao;
+    private PostServiceDAO dao;
     @Mock
-    UserService userService;
+    private UserService userService;
     @Mock
-    CommunityService communityService;
+    private CommunityService communityService;
+    @Mock
+    private UpdatePostMapper updatePostMapper;
     @InjectMocks
-    PostService service;
+    private PostService service;
 
     private User user;
     private Community community;
@@ -145,7 +148,8 @@ class PostServiceTest {
 
         service.updatePost(7, updateDto);
 
-        assertEquals("edited", post.getText());
+        verify(updatePostMapper).updateFromDTO(updateDto, post);
+
         assertNotNull(post.getUpdateDate());
     }
 
@@ -179,29 +183,6 @@ class PostServiceTest {
         when(dao.getPostsByAuthorId(3)).thenReturn(list);
 
         assertEquals(list, service.getPostsByAuthor(3));
-    }
-
-    @Test
-    void updatePost_positive() {
-        Post post = Post.userPostBuilder()
-                .ownerUser(user).author(user)
-                .text("a").creationDate(Instant.now())
-                .deleted(false).updateDate(null).build();
-        post.setId(11);
-        when(dao.getPostById(11)).thenReturn(post);
-
-        service.updatePost(11, "new");
-
-        assertEquals("new", post.getText());
-        assertNotNull(post.getUpdateDate());
-    }
-
-    @Test
-    void updatePost_negative() {
-        when(dao.getPostById(12)).thenReturn(null);
-
-        assertThrows(EntityNotFoundException.class,
-                () -> service.updatePost(12, "x"));
     }
 
     @Test

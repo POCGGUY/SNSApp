@@ -25,7 +25,6 @@ import java.util.List;
 @RequiredArgsConstructor
 @Tag(name = "Post", description = "Управление постами")
 public class PostRestController {
-
     private final PostService postService;
     private final UserService userService;
     private final CommunityService communityService;

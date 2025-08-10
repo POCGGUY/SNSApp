@@ -5,14 +5,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pocgg.SNSApp.DTO.display.FriendshipRequestDisplayDTO;
 import ru.pocgg.SNSApp.DTO.mappers.display.FriendshipRequestDisplayMapper;
 import ru.pocgg.SNSApp.model.*;
-import ru.pocgg.SNSApp.model.exceptions.BadRequestException;
 import ru.pocgg.SNSApp.services.*;
 
 import java.time.Instant;
@@ -25,7 +23,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "Friendship Request", description = "Управление запросами в друзья")
 public class FriendshipRequestRestController extends TemplateController {
-
     private final FriendshipRequestService friendshipRequestService;
     private final FriendshipRequestDisplayMapper friendshipRequestDisplayMapper;
 
@@ -45,7 +42,7 @@ public class FriendshipRequestRestController extends TemplateController {
     public ResponseEntity<List<FriendshipRequestDisplayDTO>> sent(@AuthenticationPrincipal(expression = "id")
                                                                       int userId) {
         return ResponseEntity
-                .ok(getDtosSortedByCreationDate(friendshipRequestService.getRequestsBySenderId(userId)));
+                .ok(getDTOsSortedByCreationDate(friendshipRequestService.getRequestsBySenderId(userId)));
     }
 
     @Operation(summary = "Список входящих запросов")
@@ -54,7 +51,7 @@ public class FriendshipRequestRestController extends TemplateController {
     public ResponseEntity<List<FriendshipRequestDisplayDTO>> received(@AuthenticationPrincipal(expression = "id")
                                                                           int userId) {
         return ResponseEntity
-                .ok(getDtosSortedByCreationDate(friendshipRequestService.getRequestsByReceiverId(userId)));
+                .ok(getDTOsSortedByCreationDate(friendshipRequestService.getRequestsByReceiverId(userId)));
     }
 
     @Operation(summary = "Принять запрос в друзья")
@@ -94,7 +91,7 @@ public class FriendshipRequestRestController extends TemplateController {
         return ResponseEntity.noContent().build();
     }
 
-    private List<FriendshipRequestDisplayDTO> getDtosSortedByCreationDate(List<FriendshipRequest> requests) {
+    private List<FriendshipRequestDisplayDTO> getDTOsSortedByCreationDate(List<FriendshipRequest> requests) {
         return requests.stream().sorted(Comparator.comparing(FriendshipRequest::getCreationDate).reversed())
                 .map(friendshipRequestDisplayMapper::toDTO).collect(Collectors.toList());
     }

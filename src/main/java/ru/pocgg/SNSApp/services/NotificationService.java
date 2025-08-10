@@ -1,6 +1,6 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.model.Notification;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
@@ -29,14 +29,22 @@ public class NotificationService extends TemplateService{
         return notification;
     }
 
+    @Transactional(readOnly = true)
     public List<Notification> getAllNotifications() {
         return notificationServiceDAO.getAllNotifications();
     }
 
-    public List<Notification> getNotificationsByReceiverId(int receiverId) {
-        return notificationServiceDAO.getNotificationsByReceiverId(receiverId);
+    @Transactional(readOnly = true)
+    public List<Notification> getAllNotificationsByReceiverId(int receiverId) {
+        return notificationServiceDAO.getAllNotificationsByReceiverId(receiverId);
     }
 
+    @Transactional(readOnly = true)
+    public List<Notification> getNotSeenNotificationsByReceiverId(int receiverId) {
+        return notificationServiceDAO.getNotSeenNotificationsByReceiverId(receiverId);
+    }
+
+    @Transactional(readOnly = true)
     public Notification getNotificationById(int id) {
         return getNotificationByIdOrThrowException(id);
     }

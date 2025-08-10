@@ -28,11 +28,8 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "Chat Member", description = "Управление участниками чата")
 public class ChatMemberRestController extends TemplateController {
-
     private final ChatMemberService chatMemberService;
     private final ChatMemberDisplayMapper chatMemberDisplayMapper;
-    private final ChatInvitationService chatInvitationService;
-    private final ChatService chatService;
 
     @Operation(summary = "Вступить в чат")
     @PreAuthorize("hasRole('USER') and @chatPermissionService.canJoinChat(principal.id, #chatId)")

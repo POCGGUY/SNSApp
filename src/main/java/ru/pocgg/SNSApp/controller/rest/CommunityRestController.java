@@ -24,7 +24,6 @@ import java.util.stream.Collectors;
 @Tag(name = "Community", description = "Управление сообществами")
 @RequestMapping("/communities")
 public class CommunityRestController extends TemplateController {
-
     private final CommunityService communityService;
     private final CommunityDisplayMapper communityDisplayMapper;
 
@@ -81,7 +80,7 @@ public class CommunityRestController extends TemplateController {
     @Operation(summary = "Поиск сообществ по названию")
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/search")
-    public ResponseEntity<List<CommunityDisplayDTO>> searchCommunities(@RequestParam String name) {
+    public ResponseEntity<List<CommunityDisplayDTO>> searchCommunities(@RequestParam(required = false) String name) {
         List<Community> result = communityService.searchCommunities(name);
         List<CommunityDisplayDTO> DTOs = getDTOs(result);
         return ResponseEntity.ok(DTOs);
