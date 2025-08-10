@@ -1,8 +1,9 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.DTO.create.CreatePrivateMessageDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdatePrivateMessageMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdatePrivateMessageDTO;
 import ru.pocgg.SNSApp.model.PrivateMessage;
 import ru.pocgg.SNSApp.model.User;
@@ -19,6 +20,7 @@ import java.util.List;
 public class PrivateMessageService extends TemplateService{
     private final PrivateMessageDAO privateMessageDAO;
     private final UserService userService;
+    private final UpdatePrivateMessageMapper updatePrivateMessageMapper;
 
     public PrivateMessage createMessage(int senderId, int receiverId, CreatePrivateMessageDTO dto) {
         User sender = userService.getUserById(senderId);
@@ -39,14 +41,16 @@ public class PrivateMessageService extends TemplateService{
 
     public void updateMessage(int messageId, UpdatePrivateMessageDTO dto) {
         PrivateMessage message = getMessageByIdOrThrowException(messageId);
-        updateText(message, dto.getText());
+        updatePrivateMessageMapper.updateFromDTO(dto, message);
         updateTime(message);
     }
 
+    @Transactional(readOnly = true)
     public PrivateMessage getById(int messageId) {
         return getMessageByIdOrThrowException(messageId);
     }
 
+    @Transactional(readOnly = true)
     public List<PrivateMessage> getAllBySenderAndReceiver(int senderId, int receiverId) {
         return privateMessageDAO.getAllBySenderAndReceiver(senderId, receiverId);
     }
@@ -70,10 +74,4 @@ public class PrivateMessageService extends TemplateService{
         message.setUpdateDate(Instant.now());
     }
 
-    private void updateText(PrivateMessage message, String text) {
-        if(text != null) {
-            message.setText(text);
-            logger.info("private message with id: {} has updated text", message.getId());
-        }
-    }
 }

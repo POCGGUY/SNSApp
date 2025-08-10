@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.pocgg.SNSApp.DTO.create.CreatePostCommentDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdatePostCommentMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdatePostCommentDTO;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.model.exceptions.EntityNotFoundException;
@@ -25,19 +26,21 @@ import static org.mockito.Mockito.*;
 class PostCommentServiceTest {
 
     @Mock
-    PostCommentServiceDAO dao;
+    private PostCommentServiceDAO dao;
     @Mock
-    PostService postService;
+    private PostService postService;
     @Mock
-    UserService userService;
+    private UserService userService;
+    @Mock
+    private UpdatePostCommentMapper updatePostCommentMapper;
     @InjectMocks
-    PostCommentService service;
+    private PostCommentService service;
 
-    CreatePostCommentDTO createDto;
-    UpdatePostCommentDTO updateDto;
-    Post post;
-    User author;
-    PostComment comment;
+    private CreatePostCommentDTO createDto;
+    private UpdatePostCommentDTO updateDto;
+    private Post post;
+    private User author;
+    private PostComment comment;
 
     @BeforeEach
     void setUp() {
@@ -127,7 +130,8 @@ class PostCommentServiceTest {
 
         service.updateComment(42, updateDto);
 
-        assertEquals("updated", comment.getText());
+        verify(updatePostCommentMapper).updateFromDTO(updateDto, comment);
+
         assertNotNull(comment.getUpdateDate());
     }
 

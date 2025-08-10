@@ -6,6 +6,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 import ru.pocgg.SNSApp.DTO.create.CreatePrivateMessageDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdatePrivateMessageMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdatePrivateMessageDTO;
 import ru.pocgg.SNSApp.model.Gender;
 import ru.pocgg.SNSApp.model.PrivateMessage;
@@ -27,11 +28,13 @@ import static org.mockito.Mockito.*;
 class PrivateMessageServiceTest {
 
     @Mock
-    PrivateMessageDAO dao;
+    private PrivateMessageDAO dao;
     @Mock
-    UserService userService;
+    private UserService userService;
+    @Mock
+    private UpdatePrivateMessageMapper updatePrivateMessageMapper;
     @InjectMocks
-    PrivateMessageService service;
+    private PrivateMessageService service;
 
     private User sender;
     private User receiver;
@@ -125,7 +128,8 @@ class PrivateMessageServiceTest {
 
         service.updateMessage(7, updateDto);
 
-        assertEquals("edited", privateMessage.getText());
+        verify(updatePrivateMessageMapper).updateFromDTO(updateDto, privateMessage);
+
         assertNotNull(privateMessage.getUpdateDate());
     }
 

@@ -25,9 +25,9 @@ import static org.mockito.Mockito.*;
 class UserDetailsServiceImplTest {
 
     @Mock
-    UserService userService;
+    private UserService userService;
     @InjectMocks
-    UserDetailsServiceImpl userDetailsService;
+    private UserDetailsServiceImpl userDetailsService;
 
     private User user;
 

@@ -7,7 +7,8 @@ import java.util.List;
 public interface NotificationServiceDAO {
     Notification getNotificationById(int id);
     List<Notification> getAllNotifications();
-    List<Notification> getNotificationsByReceiverId(int receiverId);
+    List<Notification> getAllNotificationsByReceiverId(int receiverId);
+    List<Notification> getNotSeenNotificationsByReceiverId(int receiverId);
     void addNotification(Notification notification);
     void removeNotification(Notification notification);
     void forceFlush();

@@ -1,6 +1,6 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.model.CommunityMember;
 import ru.pocgg.SNSApp.model.CommunityMemberId;
@@ -42,6 +42,7 @@ public class CommunityMemberService extends TemplateService{
         return member;
     }
 
+    @Transactional(readOnly = true)
     public List<CommunityMember> getMembersByCommunityId(int communityId) {
         return communityMemberServiceDAO.getMembersByCommunityId(communityId);
     }
@@ -53,10 +54,12 @@ public class CommunityMemberService extends TemplateService{
                 memberId.getCommunityId() + "  now have community role set to : " + role.toString());
     }
 
+    @Transactional(readOnly = true)
     public List<CommunityMember> getAllMembers() {
         return communityMemberServiceDAO.getAllMembers();
     }
 
+    @Transactional(readOnly = true)
     public CommunityMember getMemberById(CommunityMemberId id) {
         return getMemberByIdOrThrowException(id);
     }
@@ -67,6 +70,7 @@ public class CommunityMemberService extends TemplateService{
         logger.info("removed member with id: {} from community with id: {}", id.getMemberId(), id.getCommunityId());
     }
 
+    @Transactional(readOnly = true)
     public Boolean isMemberExist(CommunityMemberId id) {
         return communityMemberServiceDAO.getMemberById(id) != null;
     }

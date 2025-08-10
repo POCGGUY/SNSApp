@@ -1,11 +1,13 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.pocgg.SNSApp.DTO.create.CreateUserDTO;
 import ru.pocgg.SNSApp.DTO.create.CreateUserWithRoleDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdateUserMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdateUserDTO;
 import ru.pocgg.SNSApp.model.Gender;
 import ru.pocgg.SNSApp.model.SystemRole;
@@ -25,23 +27,29 @@ import java.util.List;
 @Transactional
 public class UserService extends TemplateService{
     private final UserServiceDAO userServiceDAO;
+    private final UpdateUserMapper updateUserMapper;
     private final PasswordEncoder passwordEncoder;
-    private final ApplicationEventPublisher eventPublisher;
+    private final RabbitTemplate rabbitTemplate;
+
+    @Value("${app.events.exchange}")
+    private String exchangeName;
 
     private final SystemRole defaultSystemRole = SystemRole.USER;
     private final boolean defaultPostsPublic = true;
     private final boolean defaultAcceptingPrivateMsgs = true;
 
+    @Transactional(readOnly = true)
     public User getUserById(int userId) {
         return getUserByIdOrThrowException(userId);
     }
 
+    @Transactional(readOnly = true)
     public User getUserByUserName(String userName) {
         return getUserByUserNameOrThrowException(userName);
     }
 
     public User createUser(CreateUserDTO createUserDTO) {
-        validate(createUserDTO.getUserName(), createUserDTO.getEmail());
+        checkIsUniqueValuesValid(createUserDTO.getUserName(), createUserDTO.getEmail());
         User user = User.builder()
                 .userName(createUserDTO.getUserName())
                 .creationDate(Instant.now())
@@ -65,7 +73,7 @@ public class UserService extends TemplateService{
     }
 
     public User createUserWithSystemRole(CreateUserWithRoleDTO dto) {
-        validate(dto.getUserName(), dto.getEmail());
+        checkIsUniqueValuesValid(dto.getUserName(), dto.getEmail());
         User user = User.builder()
                 .userName(dto.getUserName())
                 .creationDate(Instant.now())
@@ -89,6 +97,7 @@ public class UserService extends TemplateService{
         return user;
     }
 
+    @Transactional(readOnly = true)
     public List<User> searchUsers(String firstName,
                                   String secondName,
                                   Integer age,
@@ -98,15 +107,7 @@ public class UserService extends TemplateService{
 
     public void updateUser(int userId, UpdateUserDTO dto) {
         User user = getUserByIdOrThrowException(userId);
-        updateBirthDate(user, dto.getBirthDate());
-        updateEmail(user, dto.getEmail());
-        updateFirstName(user, dto.getFirstName());
-        updateSecondName(user, dto.getSecondName());
-        updateThirdName(user, dto.getThirdName());
-        updateGender(user, dto.getGender());
-        updateDescription(user, dto.getDescription());
-        updateAcceptingPrivateMsgs(user, dto.getAcceptingPrivateMsgs());
-        updatePostsPublic(user, dto.getPostsPublic());
+        updateUserMapper.updateFromDTO(dto, user);
     }
 
     public void setSystemRole(int userId, SystemRole systemRole) {
@@ -126,7 +127,10 @@ public class UserService extends TemplateService{
         } else {
             user.setBanned(value);
             if(value){
-                eventPublisher.publishEvent(new UserDeactivatedEvent(userId));
+                UserDeactivatedEvent event = UserDeactivatedEvent.builder()
+                                .userId(userId)
+                                        .build();
+                rabbitTemplate.convertAndSend(exchangeName, "user.deactivated", event);
             }
             logger.info("user with id: {} now have banned: {}", userId, value);
         }
@@ -139,67 +143,15 @@ public class UserService extends TemplateService{
         } else {
             user.setDeleted(value);
             if(value){
-                eventPublisher.publishEvent(new UserDeactivatedEvent(userId));
+                UserDeactivatedEvent event = UserDeactivatedEvent.builder()
+                        .userId(userId)
+                        .build();
+                rabbitTemplate.convertAndSend(exchangeName, "user.deactivated", event);
             }
             logger.info("user with id: {} now have deleted: {}", userId, value);
         }
     }
 
-    private void updateBirthDate(User user, String birthDate) {
-        if (birthDate != null) {
-            user.setBirthDate(LocalDate.parse(birthDate));
-            logger.info("User with id: {} has updated birth date to: {}", user.getId(), birthDate);
-        }
-    }
-    private void updateEmail(User user, String email) {
-        if (email != null && !email.equals(user.getEmail())) {
-            validateByEmail(email);
-            user.setEmail(email);
-            logger.info("User with id: {} has updated email: {}", user.getId(), email);
-        }
-    }
-    private void updateFirstName(User user, String firstName) {
-        if (firstName != null) {
-            user.setFirstName(firstName);
-            logger.info("User with id: {} has updated first name: {}", user.getId(), firstName);
-        }
-    }
-    private void updateSecondName(User user, String secondName) {
-        if (secondName != null) {
-            user.setSecondName(secondName);
-            logger.info("User with id: {} has updated second name: {}", user.getId(), secondName);
-        }
-    }
-    private void updateThirdName(User user, String thirdName) {
-        if (thirdName != null) {
-            user.setThirdName(thirdName);
-            logger.info("User with id: {} has updated third name: {}", user.getId(), thirdName);
-        }
-    }
-    private void updateGender(User user, String gender) {
-        if (gender != null) {
-            user.setGender(Gender.fromString(gender));
-            logger.info("User with id: {} has updated gender to: {}", user.getId(), gender);
-        }
-    }
-    private void updateDescription(User user, String description) {
-        if (description != null) {
-            user.setDescription(description);
-            logger.info("User with id: {} has updated description: {}", user.getId(), description);
-        }
-    }
-    private void updateAcceptingPrivateMsgs(User user, Boolean value) {
-        if (value != null) {
-            user.setAcceptingPrivateMsgs(value);
-            logger.info("User with id: {} has updated flag acceptingPrivateMsgs to: {}", user.getId(), value);
-        }
-    }
-    private void updatePostsPublic(User user, Boolean value) {
-        if (value != null) {
-            user.setPostsPublic(value);
-            logger.info("User with id: {} has updated flag postsPublic to: {}", user.getId(), value);
-        }
-    }
     private User getUserByIdOrThrowException(int Id) {
         User user = userServiceDAO.getUserById(Id);
         if (user != null) {
@@ -227,7 +179,7 @@ public class UserService extends TemplateService{
         }
     }
 
-    private void validate(String userName, String email) {
+    private void checkIsUniqueValuesValid(String userName, String email) {
         validateByUserName(userName);
         validateByEmail(email);
     }

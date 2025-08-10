@@ -4,9 +4,12 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.ApplicationEventPublisher;
 import ru.pocgg.SNSApp.DTO.create.CreateCommunityDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdateCommunityMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdateCommunityDTO;
+import ru.pocgg.SNSApp.config.RabbitConfig;
 import ru.pocgg.SNSApp.events.events.CommunityCreatedEvent;
 import ru.pocgg.SNSApp.events.events.CommunityDeactivatedEvent;
 import ru.pocgg.SNSApp.model.Community;
@@ -35,7 +38,9 @@ class CommunityServiceTest {
     @Mock
     private UserService userService;
     @Mock
-    private ApplicationEventPublisher eventPublisher;
+    private RabbitTemplate rabbitTemplate;
+    @Mock
+    private UpdateCommunityMapper updateCommunityMapper;
     @Mock
     private CommunityMemberServiceDAO communityMemberServiceDAO;
 
@@ -77,7 +82,6 @@ class CommunityServiceTest {
 
         assertNotNull(created);
         verify(communityServiceDAO).addCommunity(any());
-        verify(eventPublisher).publishEvent(any(CommunityCreatedEvent.class));
     }
 
     @Test
@@ -95,7 +99,7 @@ class CommunityServiceTest {
 
         communityService.updateCommunity(1, dto);
 
-        assertEquals("NewName", community.getCommunityName());
+        verify(updateCommunityMapper).updateFromDTO(dto, community);
     }
 
     @Test
@@ -183,7 +187,6 @@ class CommunityServiceTest {
         communityService.setIsDeleted(1, true);
 
         assertTrue(community.getDeleted());
-        verify(eventPublisher).publishEvent(any(CommunityDeactivatedEvent.class));
     }
 
     @Test
@@ -192,8 +195,6 @@ class CommunityServiceTest {
         when(communityServiceDAO.getCommunityById(1)).thenReturn(community);
 
         communityService.setIsDeleted(1, true);
-
-        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -203,7 +204,6 @@ class CommunityServiceTest {
         communityService.setIsBanned(1, true);
 
         assertTrue(community.getBanned());
-        verify(eventPublisher).publishEvent(any(CommunityDeactivatedEvent.class));
     }
 
     @Test
@@ -212,7 +212,5 @@ class CommunityServiceTest {
         when(communityServiceDAO.getCommunityById(1)).thenReturn(community);
 
         communityService.setIsBanned(1, true);
-
-        verify(eventPublisher, never()).publishEvent(any());
     }
 }

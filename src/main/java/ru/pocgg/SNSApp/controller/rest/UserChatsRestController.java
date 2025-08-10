@@ -10,7 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import ru.pocgg.SNSApp.DTO.mappers.ChatDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.ChatDisplayMapper;
 import ru.pocgg.SNSApp.model.Chat;
 import ru.pocgg.SNSApp.services.ChatService;
 
@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "User Chats", description = "Чаты, в которых состоит пользователь")
 public class UserChatsRestController {
-
     private final ChatService chatService;
     private final ChatDisplayMapper chatDisplayMapper;
 

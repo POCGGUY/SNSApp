@@ -86,11 +86,11 @@ class NotificationServiceTest {
     }
 
     @Test
-    void getNotificationsByReceiverId_positive() {
+    void getAllNotificationsByReceiverId_positive() {
         List<Notification> list = List.of(notification);
-        when(dao.getNotificationsByReceiverId(1)).thenReturn(list);
+        when(dao.getAllNotificationsByReceiverId(1)).thenReturn(list);
 
-        List<Notification> outNotification = service.getNotificationsByReceiverId(1);
+        List<Notification> outNotification = service.getAllNotificationsByReceiverId(1);
 
         assertEquals(list, outNotification);
     }

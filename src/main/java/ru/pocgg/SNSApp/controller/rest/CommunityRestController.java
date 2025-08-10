@@ -6,19 +6,15 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import ru.pocgg.SNSApp.DTO.display.UserDisplayDTO;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.DTO.display.CommunityDisplayDTO;
 import ru.pocgg.SNSApp.DTO.create.CreateCommunityDTO;
 import ru.pocgg.SNSApp.DTO.update.UpdateCommunityDTO;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityDisplayMapper;
 import ru.pocgg.SNSApp.services.CommunityService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -28,17 +24,13 @@ import java.util.stream.Collectors;
 @Tag(name = "Community", description = "Управление сообществами")
 @RequestMapping("/communities")
 public class CommunityRestController extends TemplateController {
-
     private final CommunityService communityService;
     private final CommunityDisplayMapper communityDisplayMapper;
-    private final PermissionCheckService permissionCheckService;
 
     @Operation(summary = "Получить сообщество по id")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @communityPermissionService.canViewCommunity(principal.id, #id)")
     @GetMapping("/{id}")
-    public ResponseEntity<CommunityDisplayDTO> getCommunity(@AuthenticationPrincipal(expression = "id") int userId,
-                                                            @PathVariable int id) {
-        checkCanViewCommunity(userId, id);
+    public ResponseEntity<CommunityDisplayDTO> getCommunity(@PathVariable int id) {
         Community community = communityService.getCommunityById(id);
         return ResponseEntity.ok(communityDisplayMapper.toDTO(community));
     }
@@ -53,24 +45,21 @@ public class CommunityRestController extends TemplateController {
     }
 
     @Operation(summary = "Редактировать сообщество")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @communityPermissionService.canEditCommunity(principal.id, #id)")
     @PatchMapping("/{id}")
-    public ResponseEntity<Void> editCommunity(@AuthenticationPrincipal(expression = "id") int userId,
-                                              @PathVariable int id,
+    public ResponseEntity<Void> editCommunity(@PathVariable int id,
                                               @Valid @RequestBody UpdateCommunityDTO dto) {
-        checkCanEditCommunity(userId, id);
         communityService.updateCommunity(id, dto);
         return ResponseEntity.ok().build();
     }
 
 
     @Operation(summary = "Активировать/деактивировать сообщество")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @communityPermissionService.canDeleteCommunity(principal.id, #id)")
     @PatchMapping("/{id}/deleted")
     public ResponseEntity<Void> setDeleted(@PathVariable int id,
                                            @AuthenticationPrincipal(expression = "id") int userId,
                                            @RequestParam boolean value) {
-        checkCanSetDeleted(userId, id);
         communityService.setIsDeleted(id, value);
         logger.info("user with id: {}, has set deleted to: {}, in community with id: {}",
                 userId, value, id);
@@ -91,10 +80,9 @@ public class CommunityRestController extends TemplateController {
     @Operation(summary = "Поиск сообществ по названию")
     @PreAuthorize("hasRole('USER')")
     @GetMapping("/search")
-    public ResponseEntity<List<CommunityDisplayDTO>> searchCommunities(@RequestParam String name) {
+    public ResponseEntity<List<CommunityDisplayDTO>> searchCommunities(@RequestParam(required = false) String name) {
         List<Community> result = communityService.searchCommunities(name);
-        List<CommunityDisplayDTO> DTOs = result.stream().map(communityDisplayMapper::toDTO)
-                .collect(Collectors.toList());
+        List<CommunityDisplayDTO> DTOs = getDTOs(result);
         return ResponseEntity.ok(DTOs);
     }
 
@@ -103,28 +91,12 @@ public class CommunityRestController extends TemplateController {
     @GetMapping("/all")
     public ResponseEntity<List<CommunityDisplayDTO>> getAllCommunities() {
         List<Community> result = communityService.getAllCommunities();
-        List<CommunityDisplayDTO> DTOs = result.stream().map(communityDisplayMapper::toDTO)
-                .collect(Collectors.toList());
+        List<CommunityDisplayDTO> DTOs = getDTOs(result);
         return ResponseEntity.ok(DTOs);
     }
 
-
-    private void checkCanViewCommunity(int userId, int communityId) {
-        if (!permissionCheckService.canUserViewCommunity(userId, communityId)) {
-            throw new AccessDeniedException("You do not have permission to get this community");
-        }
-    }
-
-    private void checkCanEditCommunity(int userId, int communityId) {
-        if (!permissionCheckService.canUserEditCommunity(userId, communityId)) {
-            throw new AccessDeniedException("You do not have permission to edit this community");
-        }
-    }
-
-    private void checkCanSetDeleted(int userId, int communityId) {
-        if (!permissionCheckService.isUserCommunityOwner(userId, communityId)) {
-            throw new AccessDeniedException("You do not have permission to change deleted status for this community");
-        }
+    private List<CommunityDisplayDTO> getDTOs(List<Community> communities){
+        return communities.stream().map(communityDisplayMapper::toDTO).collect(Collectors.toList());
     }
 }
 

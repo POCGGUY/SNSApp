@@ -1,7 +1,9 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import ru.pocgg.SNSApp.model.CommunityInvitation;
 import ru.pocgg.SNSApp.model.CommunityInvitationId;
@@ -23,7 +25,10 @@ public class CommunityInvitationService extends TemplateService {
     private final CommunityInvitationServiceDAO communityInvitationServiceDAO;
     private final UserService userService;
     private final CommunityService communityService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final RabbitTemplate rabbitTemplate;
+
+    @Value("${app.events.exchange}")
+    private String exchangeName;
 
     public CommunityInvitation createInvitation(int senderId, int receiverId, int communityId,
                                                 Instant creationDate, CreateCommunityInvitationDTO dto) {
@@ -34,32 +39,37 @@ public class CommunityInvitationService extends TemplateService {
                 .creationDate(creationDate)
                 .description(dto.getDescription()).build();
         communityInvitationServiceDAO.addInvitation(invitation);
-        eventPublisher.publishEvent(
-                CommunityInvitationCreatedEvent.builder()
-                        .id(invitation.getId())
-                        .build());
+        CommunityInvitationCreatedEvent event = CommunityInvitationCreatedEvent.builder()
+                .id(invitation.getId())
+                .build();
+        rabbitTemplate.convertAndSend(exchangeName, "community.invitation.created", event);
         logger.info("created community invitation from user with id: " +
                         "{} to user with id: {} in community with id: {}",
                 senderId, receiverId, communityId);
         return invitation;
     }
 
+    @Transactional(readOnly = true)
     public boolean isInvitationExist(CommunityInvitationId invitationId) {
         return communityInvitationServiceDAO.getInvitationById(invitationId) != null;
     }
 
+    @Transactional(readOnly = true)
     public List<CommunityInvitation> getInvitationsBySenderId(int senderId) {
         return communityInvitationServiceDAO.getInvitationsBySenderId(senderId);
     }
 
+    @Transactional(readOnly = true)
     public List<CommunityInvitation> getInvitationsByReceiverId(int receiverId) {
         return communityInvitationServiceDAO.getInvitationsByReceiverId(receiverId);
     }
 
+    @Transactional(readOnly = true)
     public List<CommunityInvitation> getInvitationsByCommunityId(int communityId) {
         return communityInvitationServiceDAO.getInvitationsByCommunityId(communityId);
     }
 
+    @Transactional(readOnly = true)
     public CommunityInvitation getInvitationById(CommunityInvitationId id) {
         return getInvitationByIdOrThrowException(id);
     }
@@ -72,10 +82,10 @@ public class CommunityInvitationService extends TemplateService {
 
     public void acceptInvitation(CommunityInvitationId id) {
         CommunityInvitation invitation = getInvitationByIdOrThrowException(id);
-        eventPublisher.publishEvent(
-                CommunityInvitationAcceptedEvent.builder()
-                        .id(id)
-                        .build());
+        CommunityInvitationAcceptedEvent event = CommunityInvitationAcceptedEvent.builder()
+                .id(id)
+                .build();
+        rabbitTemplate.convertAndSend(exchangeName, "community.invitation.accepted", event);
         communityInvitationServiceDAO.removeInvitation(invitation);
         logger.info("User with id: {} has accepted invitation to community with id: {}",
                 id.getReceiverId(), id.getCommunityId());
@@ -83,10 +93,10 @@ public class CommunityInvitationService extends TemplateService {
 
     public void declineInvitation(CommunityInvitationId id) {
         CommunityInvitation invitation = getInvitationByIdOrThrowException(id);
-        eventPublisher.publishEvent(
-                CommunityInvitationDeclinedEvent.builder()
-                        .id(id)
-                        .build());
+        CommunityInvitationDeclinedEvent event = CommunityInvitationDeclinedEvent.builder()
+                .id(id)
+                .build();
+        rabbitTemplate.convertAndSend(exchangeName, "community.invitation.declined", event);
         communityInvitationServiceDAO.removeInvitation(invitation);
         logger.info("User with id: {} has declined invitation to community with id: {}",
                 id.getReceiverId(), id.getCommunityId());
@@ -111,12 +121,6 @@ public class CommunityInvitationService extends TemplateService {
     public void removeBySenderId(int senderId) {
         communityInvitationServiceDAO.removeBySenderId(senderId);
         logger.info("all community invitations by sender with id: {} has been removed", senderId);
-    }
-
-    public void removeBySenderAndCommunity(int senderId, int communityId) {
-        communityInvitationServiceDAO.removeBySenderAndCommunity(senderId, communityId);
-        logger.info("all invitations in community with id: {} sent by sender with id: {} has been removed",
-                senderId, communityId);
     }
 
     private CommunityInvitation getInvitationByIdOrThrowException(CommunityInvitationId id) {

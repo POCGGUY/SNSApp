@@ -1,7 +1,9 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 import ru.pocgg.SNSApp.DTO.create.CreatePostCommentDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdatePostCommentMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdatePostCommentDTO;
 import ru.pocgg.SNSApp.model.Post;
 import ru.pocgg.SNSApp.model.PostComment;
@@ -14,18 +16,13 @@ import java.util.List;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class PostCommentService extends TemplateService{
     private final PostCommentServiceDAO postCommentServiceDAO;
     private final PostService postService;
     private final UserService userService;
+    private final UpdatePostCommentMapper updatePostCommentMapper;
 
-    public PostCommentService(PostCommentServiceDAO postCommentServiceDAO,
-                              PostService postService,
-                              UserService userService) {
-        this.postCommentServiceDAO = postCommentServiceDAO;
-        this.postService = postService;
-        this.userService = userService;
-    }
 
     public PostComment createComment(int postId,
                               int authorId,
@@ -51,25 +48,20 @@ public class PostCommentService extends TemplateService{
         logger.info("comment with id: {} now has property deleted set to: {}", commentId, value);
     }
 
+    @Transactional(readOnly = true)
     public PostComment getCommentById(int commentId) {
         return getCommentByIdOrThrowException(commentId);
     }
 
     public void updateComment(int commentId, UpdatePostCommentDTO dto) {
         PostComment comment = getCommentByIdOrThrowException(commentId);
-        updateText(comment, dto.getText());
+        updatePostCommentMapper.updateFromDTO(dto, comment);
         updateTime(comment);
     }
 
+    @Transactional(readOnly = true)
     public List<PostComment> getCommentsByPostId(int postId) {
         return postCommentServiceDAO.getCommentsByPostId(postId);
-    }
-
-    private void updateText(PostComment postComment, String text){
-        if(text != null){
-            postComment.setText(text);
-            logger.info("post comment with id: {} has updated text", postComment.getId());
-        }
     }
 
     private void updateTime(PostComment postComment){

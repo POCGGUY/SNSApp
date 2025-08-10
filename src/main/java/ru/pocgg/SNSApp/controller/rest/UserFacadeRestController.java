@@ -9,15 +9,17 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import ru.pocgg.SNSApp.DTO.display.FriendshipDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.FriendshipDisplayMapper;
-import ru.pocgg.SNSApp.DTO.mappers.PostDisplayMapper;
-import ru.pocgg.SNSApp.DTO.mappers.UserDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.FriendshipDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.PostDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.UserDisplayMapper;
 import ru.pocgg.SNSApp.model.Friendship;
 import ru.pocgg.SNSApp.model.Post;
 import ru.pocgg.SNSApp.model.User;
 import ru.pocgg.SNSApp.DTO.display.UserFacadeDisplayDTO;
 import ru.pocgg.SNSApp.DTO.display.PostDisplayDTO;
 import ru.pocgg.SNSApp.services.*;
+import ru.pocgg.SNSApp.services.permission.PostPermissionService;
+import ru.pocgg.SNSApp.services.permission.UserPermissionService;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -29,25 +31,23 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "User Facade", description = "Информация о пользователе, его постах и друзьях")
 public class UserFacadeRestController {
-
     private final UserService userService;
     private final PostService postService;
     private final FriendshipService friendshipService;
-    private final PermissionCheckService permissionCheckService;
     private final UserDisplayMapper userDisplayMapper;
     private final PostDisplayMapper postDisplayMapper;
+    private final PostPermissionService postPermissionService;
     private final FriendshipDisplayMapper friendshipDisplayMapper;
 
     @Operation(summary = "Получить полный профиль пользователя")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @userPermissionService.canViewUserProfile(principal.id, #userId)")
     @GetMapping("/{userId}")
     public ResponseEntity<UserFacadeDisplayDTO> getUserFacade(@AuthenticationPrincipal(expression = "id")
                                                                   int currentUserId,
                                                               @PathVariable int userId) {
-        checkCanViewProfile(currentUserId, userId);
         User user = userService.getUserById(userId);
         List<PostDisplayDTO> posts = new ArrayList<>();
-        if(permissionCheckService.canViewPostsAtUser(currentUserId, userId)) {
+        if(postPermissionService.canViewUserPosts(currentUserId, userId)) {
             posts = getPostsDtosSortedByCreationDate(postService.getPostsByUserOwner(userId));
         }
         List<FriendshipDisplayDTO> friends =
@@ -66,11 +66,5 @@ public class UserFacadeRestController {
     private List<FriendshipDisplayDTO> getFriendshipDtos(List<Friendship> friends, int currentUserId) {
         return friends.stream().map(friend -> friendshipDisplayMapper.toDTO(friend, currentUserId))
                 .collect(Collectors.toList());
-    }
-
-    private void checkCanViewProfile(int currentUserId, int targetUserId) {
-        if (!permissionCheckService.canViewUserProfile(currentUserId, targetUserId)) {
-            throw new AccessDeniedException("You are not authorized to view this profile");
-        }
     }
 }

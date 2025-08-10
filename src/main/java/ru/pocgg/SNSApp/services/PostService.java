@@ -1,7 +1,8 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdatePostMapper;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.DTO.create.CreatePostDTO;
 import ru.pocgg.SNSApp.DTO.update.UpdatePostDTO;
@@ -19,6 +20,7 @@ public class PostService extends TemplateService{
     private final PostServiceDAO postDAO;
     private final UserService userService;
     private final CommunityService communityService;
+    private final UpdatePostMapper updatePostMapper;
 
     public Post createUserPost(int ownerId, int authorId, CreatePostDTO dto) {
         User owner = userService.getUserById(ownerId);
@@ -54,31 +56,29 @@ public class PostService extends TemplateService{
 
     public void updatePost(int postId, UpdatePostDTO dto) {
         Post post = getPostByIdOrThrowException(postId);
-        updateText(post, dto.getText());
+        updatePostMapper.updateFromDTO(dto, post);
         updateTime(post);
+        logger.info("updated text of post with id: {}", postId);
     }
 
+    @Transactional(readOnly = true)
     public Post getPostById(int postId) {
         return getPostByIdOrThrowException(postId);
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getPostsByCommunityOwner(int ownerId) {
         return postDAO.getPostsByCommunityOwnerId(ownerId);
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getPostsByUserOwner(int ownerId) {
         return postDAO.getPostsByUserOwnerId(ownerId);
     }
 
+    @Transactional(readOnly = true)
     public List<Post> getPostsByAuthor(int authorId) {
         return postDAO.getPostsByAuthorId(authorId);
-    }
-
-    public void updatePostText(int postId, String newText) {
-        Post post = getPostByIdOrThrowException(postId);
-        post.setUpdateDate(Instant.now());
-        post.setText(newText);
-        logger.info("updated text of post with id: {}", postId);
     }
 
     public void setIsDeleted(int postId, boolean value) {
@@ -106,12 +106,6 @@ public class PostService extends TemplateService{
         post.setUpdateDate(Instant.now());
     }
 
-    private void updateText(Post post, String text) {
-        if(text != null) {
-            post.setText(text);
-            logger.info("post with id: {} has updated text", post.getId());
-        }
-    }
 
     private void logPostCreated(int postId, int authorId, int ownerId) {
         logger.info("created post with id: {} by author with id: {} for owner with id: {}",

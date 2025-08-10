@@ -22,10 +22,8 @@ class FriendshipServiceTest {
 
     @Mock
     private FriendshipServiceDAO dao;
-
     @Mock
     private UserService userService;
-
     @InjectMocks
     private FriendshipService service;
 

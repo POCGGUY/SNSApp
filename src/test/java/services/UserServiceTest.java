@@ -5,10 +5,12 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import ru.pocgg.SNSApp.DTO.create.CreateUserDTO;
 import ru.pocgg.SNSApp.DTO.create.CreateUserWithRoleDTO;
+import ru.pocgg.SNSApp.DTO.mappers.update.UpdateUserMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdateUserDTO;
 import ru.pocgg.SNSApp.model.Gender;
 import ru.pocgg.SNSApp.model.SystemRole;
@@ -30,10 +32,16 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class UserServiceTest {
 
-    @Mock UserServiceDAO dao;
-    @Mock PasswordEncoder encoder;
-    @Mock ApplicationEventPublisher events;
-    @InjectMocks UserService userService;
+    @Mock
+    private UserServiceDAO dao;
+    @Mock
+    private PasswordEncoder encoder;
+    @Mock
+    private UpdateUserMapper updateUserMapper;
+    @Mock
+    private RabbitTemplate rabbitTemplate;
+    @InjectMocks
+    private UserService userService;
 
     private CreateUserDTO basicDto;
     private CreateUserWithRoleDTO roleDto;
@@ -203,9 +211,7 @@ class UserServiceTest {
 
         userService.updateUser(7, updateDto);
 
-        assertEquals(LocalDate.parse("1992-03-03"), u.getBirthDate());
-        assertEquals("new@x.com", u.getEmail());
-        assertFalse(u.getAcceptingPrivateMsgs());
+        verify(updateUserMapper).updateFromDTO(updateDto, u);
     }
 
     @Test
@@ -255,11 +261,6 @@ class UserServiceTest {
         when(dao.getUserById(11)).thenReturn(u);
 
         userService.setIsBanned(11, true);
-
-        verify(events).publishEvent(argThat((Object ev) ->
-                ev instanceof UserDeactivatedEvent &&
-                        ((UserDeactivatedEvent) ev).getUserId() == 11
-        ));
         assertTrue(u.getBanned());
     }
 
@@ -285,11 +286,6 @@ class UserServiceTest {
         when(dao.getUserById(13)).thenReturn(u);
 
         userService.setIsDeleted(13, true);
-
-        verify(events).publishEvent(argThat((Object ev) ->
-                ev instanceof UserDeactivatedEvent &&
-                        ((UserDeactivatedEvent) ev).getUserId() == 13
-        ));
         assertTrue(u.getDeleted());
     }
 

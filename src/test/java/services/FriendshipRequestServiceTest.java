@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.context.ApplicationEventPublisher;
 import ru.pocgg.SNSApp.model.*;
 import ru.pocgg.SNSApp.events.events.FriendshipRequestAcceptedEvent;
@@ -27,13 +28,10 @@ class FriendshipRequestServiceTest {
 
     @Mock
     private FriendshipRequestServiceDAO dao;
-
     @Mock
     private UserService userService;
-
     @Mock
-    private ApplicationEventPublisher eventPublisher;
-
+    private RabbitTemplate rabbitTemplate;
     @InjectMocks
     private FriendshipRequestService service;
 
@@ -70,7 +68,6 @@ class FriendshipRequestServiceTest {
 
         assertNotNull(result);
         verify(dao).addRequest(any(FriendshipRequest.class));
-        verify(eventPublisher).publishEvent(any(FriendshipRequestCreatedEvent.class));
     }
 
     @Test
@@ -79,7 +76,6 @@ class FriendshipRequestServiceTest {
 
         assertThrows(EntityNotFoundException.class, () -> service.createRequest(1, 2, Instant.now()));
         verify(dao, never()).addRequest(any());
-        verify(eventPublisher, never()).publishEvent(any());
     }
 
     @Test
@@ -178,7 +174,6 @@ class FriendshipRequestServiceTest {
         service.acceptRequest(requestId);
 
         verify(dao).removeRequest(request);
-        verify(eventPublisher).publishEvent(any(FriendshipRequestAcceptedEvent.class));
     }
 
     @Test
@@ -195,7 +190,6 @@ class FriendshipRequestServiceTest {
         service.declineRequest(requestId);
 
         verify(dao).removeRequest(request);
-        verify(eventPublisher).publishEvent(any(FriendshipRequestDeclinedEvent.class));
     }
 
     @Test

@@ -3,8 +3,7 @@ package ru.pocgg.SNSApp.controller.rest;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import ru.pocgg.SNSApp.model.Community;
 import ru.pocgg.SNSApp.model.CommunityMember;
@@ -13,12 +12,11 @@ import ru.pocgg.SNSApp.model.Post;
 import ru.pocgg.SNSApp.DTO.display.CommunityDisplayDTO;
 import ru.pocgg.SNSApp.DTO.display.CommunityMemberDisplayDTO;
 import ru.pocgg.SNSApp.DTO.display.PostDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityDisplayMapper;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityMemberDisplayMapper;
-import ru.pocgg.SNSApp.DTO.mappers.PostDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityMemberDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.PostDisplayMapper;
 import ru.pocgg.SNSApp.services.CommunityMemberService;
 import ru.pocgg.SNSApp.services.CommunityService;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 import ru.pocgg.SNSApp.services.PostService;
 
 import java.util.Comparator;
@@ -36,13 +34,10 @@ public class CommunityFacadeRestController {
     private final CommunityDisplayMapper communityMapper;
     private final PostDisplayMapper postMapper;
     private final CommunityMemberDisplayMapper memberMapper;
-    private final PermissionCheckService permissionCheckService;
 
     @GetMapping("/{communityId}")
-    public ResponseEntity<CommunityFacadeDisplayDTO> getCommunityFullProfile(@AuthenticationPrincipal(expression = "id")
-                                                                          int userId,
-                                                                          @PathVariable int communityId) {
-        checkIfCanViewCommunity(userId, communityId);
+    @PreAuthorize("hasRole('USER') and @communityPermissionService.canViewCommunity(principal.id, #communityId)")
+    public ResponseEntity<CommunityFacadeDisplayDTO> getCommunityFullProfile(@PathVariable int communityId) {
         Community community = communityService.getCommunityById(communityId);
         CommunityDisplayDTO communityDTO = communityMapper.toDTO(community);
         List<PostDisplayDTO> postDTOs = getPostDTOsSortedByCreationDate
@@ -50,12 +45,6 @@ public class CommunityFacadeRestController {
         List<CommunityMemberDisplayDTO> memberDTOs = getMemberDTOs(communityId);
 
         return ResponseEntity.ok(new CommunityFacadeDisplayDTO(communityDTO, postDTOs, memberDTOs));
-    }
-
-    private void checkIfCanViewCommunity(int userId, int communityId) {
-        if(!permissionCheckService.canUserViewCommunity(userId, communityId)) {
-            throw new AccessDeniedException("you are not authorized to view this community");
-        }
     }
 
     private List<PostDisplayDTO> getPostDTOsSortedByCreationDate(List<Post> posts) {

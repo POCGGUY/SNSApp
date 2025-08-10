@@ -5,15 +5,14 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import ru.pocgg.SNSApp.DTO.create.CreateUserDTO;
 import ru.pocgg.SNSApp.DTO.create.CreateUserWithRoleDTO;
 import ru.pocgg.SNSApp.DTO.display.UserDisplayAllDTO;
 import ru.pocgg.SNSApp.DTO.display.UserDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.UserDisplayAllMapper;
-import ru.pocgg.SNSApp.DTO.mappers.UserDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.UserDisplayAllMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.UserDisplayMapper;
 import ru.pocgg.SNSApp.DTO.update.UpdateUserDTO;
 import ru.pocgg.SNSApp.model.Gender;
 import ru.pocgg.SNSApp.model.User;
@@ -21,11 +20,8 @@ import ru.pocgg.SNSApp.model.SystemRole;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import ru.pocgg.SNSApp.model.exceptions.BadRequestException;
-import ru.pocgg.SNSApp.services.PermissionCheckService;
 import ru.pocgg.SNSApp.services.UserService;
 
-import java.net.URI;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -36,9 +32,7 @@ import java.util.stream.Collectors;
 public class UserRestController extends TemplateController {
     private final UserService userService;
     private final UserDisplayMapper userDisplayMapper;
-    private final PermissionCheckService permissionCheckService;
     private final UserDisplayAllMapper userDisplayAllMapper;
-
 
     @Operation(summary = "Регистрация пользователя")
     @PostMapping("/register")
@@ -70,11 +64,9 @@ public class UserRestController extends TemplateController {
     }
 
     @Operation(summary = "Просмотр чужого профиля")
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasRole('USER') and @userPermissionService.canViewUserProfile(principal.id, #targetUserId)")
     @GetMapping("/{targetUserId}")
-    public UserDisplayDTO getProfileById(@AuthenticationPrincipal(expression = "id") int userId,
-                                         @PathVariable int targetUserId) {
-        checkCanViewUserProfile(userId, targetUserId);
+    public UserDisplayDTO getProfileById(@PathVariable int targetUserId) {
         return userDisplayMapper.toDTO(userService.getUserById(targetUserId));
     }
 
@@ -117,14 +109,13 @@ public class UserRestController extends TemplateController {
     }
 
     @Operation(summary = "Заблокировать/разблокировать пользователя")
-    @PreAuthorize("hasRole('MODERATOR')")
+    @PreAuthorize("hasRole('MODERATOR') and @userPermissionService.canBanUser(principal.id, #userId)")
     @PatchMapping("/{id}/banned")
-    public ResponseEntity<Void> setBanned(@AuthenticationPrincipal(expression = "id") int id,
-                                          @RequestParam int userId,
+    public ResponseEntity<Void> setBanned(@AuthenticationPrincipal(expression = "id") int userId,
+                                          @RequestParam int targetUserId,
                                           @RequestParam boolean banned) {
-        checkNotSelf(id, userId);
-        userService.setIsBanned(userId, banned);
-        logger.info("user with id: {} changed banned status to: {} for user with id: {}", id, banned, userId);
+        userService.setIsBanned(targetUserId, banned);
+        logger.info("user with id: {} changed banned status to: {} for user with id: {}", userId, banned, targetUserId);
         return ResponseEntity.noContent().build();
     }
 
@@ -148,17 +139,5 @@ public class UserRestController extends TemplateController {
         List<User> result = userService.searchUsers(firstName, secondName, age, gender);
         List<UserDisplayDTO> dtos = result.stream().map(userDisplayMapper::toDTO).collect(Collectors.toList());
         return ResponseEntity.ok(dtos);
-    }
-
-    private void checkCanViewUserProfile(int userId, int targetUserId) {
-        if (!permissionCheckService.canViewUserProfile(userId, targetUserId)) {
-            throw new AccessDeniedException("you are not authorized to view this profile");
-        }
-    }
-
-    private void checkNotSelf(int userId, int targetUserId) {
-        if (userId == targetUserId) {
-            throw new BadRequestException("you can't do this to yourself");
-        }
     }
 }

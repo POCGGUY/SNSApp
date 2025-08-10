@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import ru.pocgg.SNSApp.model.Community;
 import ru.pocgg.SNSApp.DTO.display.CommunityDisplayDTO;
-import ru.pocgg.SNSApp.DTO.mappers.CommunityDisplayMapper;
+import ru.pocgg.SNSApp.DTO.mappers.display.CommunityDisplayMapper;
 import ru.pocgg.SNSApp.services.CommunityService;
 
 import java.util.List;
@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Tag(name = "User Communities", description = "Сообщества, в которых состоит пользователь")
 public class UserCommunitiesRestController {
-
     private final CommunityService communityService;
     private final CommunityDisplayMapper communityDisplayMapper;
 

@@ -1,7 +1,9 @@
 package ru.pocgg.SNSApp.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import ru.pocgg.SNSApp.model.FriendshipRequest;
 import ru.pocgg.SNSApp.model.FriendshipRequestId;
@@ -21,7 +23,10 @@ import java.util.List;
 public class FriendshipRequestService extends TemplateService {
     private final FriendshipRequestServiceDAO friendshipRequestServiceDAO;
     private final UserService userService;
-    private final ApplicationEventPublisher eventPublisher;
+    private final RabbitTemplate rabbitTemplate;
+
+    @Value("${app.events.exchange}")
+    private String exchangeName;
 
     public FriendshipRequest createRequest(int senderId, int receiverId, Instant creationDate) {
         FriendshipRequest request = FriendshipRequest.builder()
@@ -29,18 +34,21 @@ public class FriendshipRequestService extends TemplateService {
                 .receiver(userService.getUserById(receiverId))
                 .creationDate(creationDate).build();
         friendshipRequestServiceDAO.addRequest(request);
-        eventPublisher.publishEvent(FriendshipRequestCreatedEvent.builder()
+        FriendshipRequestCreatedEvent event = FriendshipRequestCreatedEvent.builder()
                 .id(request.getId())
-                .build());
+                .build();
+        rabbitTemplate.convertAndSend(exchangeName, "friendship.request.created", event);
         logger.info("created friendship request from user with id: {} to user with id: {}",
                 senderId, receiverId);
         return request;
     }
 
+    @Transactional(readOnly = true)
     public List<FriendshipRequest> getRequestsBySenderId(int senderId) {
         return friendshipRequestServiceDAO.getRequestsBySenderId(senderId);
     }
 
+    @Transactional(readOnly = true)
     public List<FriendshipRequest> getRequestsByReceiverId(int receiverId) {
         return friendshipRequestServiceDAO.getRequestsByReceiverId(receiverId);
     }
@@ -55,14 +63,17 @@ public class FriendshipRequestService extends TemplateService {
         logger.info("all friend requests to receiver with id: {} has been removed", receiverId);
     }
 
+    @Transactional(readOnly = true)
     public List<FriendshipRequest> getAllRequests() {
         return friendshipRequestServiceDAO.getAllRequests();
     }
 
+    @Transactional(readOnly = true)
     public FriendshipRequest getRequestById(FriendshipRequestId id) {
         return getRequestByIdOrThrowException(id);
     }
 
+    @Transactional(readOnly = true)
     public boolean isRequestExists(FriendshipRequestId id) {
         return friendshipRequestServiceDAO.getRequestById(FriendshipRequestId.builder()
                 .senderId(id.getSenderId())
@@ -75,9 +86,10 @@ public class FriendshipRequestService extends TemplateService {
     public void acceptRequest(FriendshipRequestId id) {
         FriendshipRequest request = getRequestByIdOrThrowException(id);
         friendshipRequestServiceDAO.removeRequest(request);
-        eventPublisher.publishEvent(FriendshipRequestAcceptedEvent.builder()
+        FriendshipRequestAcceptedEvent event = FriendshipRequestAcceptedEvent.builder()
                 .id(id)
-                .build());
+                .build();
+        rabbitTemplate.convertAndSend(exchangeName, "friendship.request.accepted", event);
         logger.info("friendship request from user with id: {} to user with id: {} was accepted",
                 id.getSenderId(), id.getReceiverId());
     }
@@ -85,9 +97,10 @@ public class FriendshipRequestService extends TemplateService {
     public void declineRequest(FriendshipRequestId id) {
         FriendshipRequest request = getRequestByIdOrThrowException(id);
         friendshipRequestServiceDAO.removeRequest(request);
-        eventPublisher.publishEvent(FriendshipRequestDeclinedEvent.builder()
+        FriendshipRequestDeclinedEvent event = FriendshipRequestDeclinedEvent.builder()
                 .id(id)
-                .build());
+                .build();
+        rabbitTemplate.convertAndSend(exchangeName, "friendship.request.declined", event);
         logger.info("friendship request from user with id: {} to user with id: {} was declined",
                 id.getSenderId(), id.getReceiverId());
     }
@@ -102,7 +115,7 @@ public class FriendshipRequestService extends TemplateService {
     private FriendshipRequest getRequestByIdOrThrowException(FriendshipRequestId id) {
         FriendshipRequest request = friendshipRequestServiceDAO.getRequestById(id);
         if (request == null) {
-            throw new EntityNotFoundException("Friendship with receiver with id: "
+            throw new EntityNotFoundException("friendship request with receiver with id: "
                     + id.getReceiverId() + " and with sender with id: " + id.getSenderId() + " was not found");
         }
         return request;
